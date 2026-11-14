@@ -10,12 +10,17 @@ requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.110.0",
     "uvicorn[standard]>=0.28.0",
-    "sqlalchemy>=2.0.28",
+    "sqlalchemy[asyncio]>=2.0.28",
+    "greenlet>=3.0.3",
     "asyncpg>=0.29.0",
     "alembic>=1.13.1",
     "pydantic>=2.6.4",
     "pydantic-settings>=2.2.1",
-    "psycopg2-binary>=2.9.9"
+    "email-validator>=2.1.0",
+    "psycopg2-binary>=2.9.9",
+    "passlib[bcrypt]>=1.7.4",
+    "pyjwt>=2.8.0",
+    "bcrypt>=4.1.2"
 ]
 
 [project.optional-dependencies]
@@ -28,10 +33,10 @@ dev = [
 ]
 
 [tool.pytest.ini_options]
-minversion = "6.0"
-addopts = "-ra -q"
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "session"
+asyncio_default_test_loop_scope = "session"
 testpaths = ["tests"]
-asyncio_default_fixture_loop_scope = "function"
 
 [tool.hatch.build.targets.wheel]
 packages = ["app", "tests"]

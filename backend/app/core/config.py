@@ -1,3 +1,4 @@
+# app/core/config.py
 import sys
 import os
 from pathlib import Path
@@ -5,13 +6,16 @@ from pydantic import ValidationError
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
-    PROJECT_NAME: str = "SpaceMedx Backend"
+    PROJECT_NAME: str = "SpaceMedx"
+    ENVIRONMENT: str = "development"
     API_V1_STR: str = "/api/v1"
     DATABASE_URL: str
-    POSTGRES_USER: str = "postgres"
+    POSTGRES_USER: str = "spacemedx_user"
     POSTGRES_PASSWORD: str
     POSTGRES_DB: str = "spacemedx"
     SECRET_KEY: str
+    ALGORITHM: str = "HS256"
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     model_config = SettingsConfigDict(
         # If running locally without Docker env injection, look for .env in parent/current dirs
