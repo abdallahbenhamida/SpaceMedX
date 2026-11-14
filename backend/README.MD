@@ -112,6 +112,23 @@ Provides live bidirectional WebSocket telemetry streaming and session persistenc
   - **Response (`200 OK`):** List of `TelemetrySessionResponse` objects
   - **Description:** Lists WebSocket telemetry stream sessions for mission control operator diagnostics and active connection tracking.
 
+### 7. Organizations & Memberships (`/api/v1/organizations`)
+Manages space agencies, private enterprise contractors, research institutes, and multi-tenant user memberships.
+- **`POST /api/v1/organizations`**
+  - **Auth Required:** Bearer Token (Restricted to `sys_admin` or `org_admin`)
+  - **Payload:** `OrganizationCreate` (name, code, description, is_active)
+  - **Response (`201 Created`):** `OrganizationResponse` (id, name, code, description, is_active, created_at)
+  - **Description:** Creates a new organizational tenant namespace for mission isolation.
+- **`GET /api/v1/organizations`**
+  - **Auth Required:** Bearer Token (`get_current_user`)
+  - **Response (`200 OK`):** List of `OrganizationResponse` objects
+  - **Description:** Retrieves organizations accessible to the authenticated user.
+- **`POST /api/v1/organizations/{org_id}/members`**
+  - **Auth Required:** Bearer Token (Restricted to `org_admin` or `sys_admin`)
+  - **Payload:** `OrganizationMembershipCreate` (user_id, role_in_org)
+  - **Response (`201 Created`):** `OrganizationMembershipResponse`
+  - **Description:** Assigns a user to an organization via the `organization_memberships` relationship mapper.
+
 ---
 
 ## Database & Migrations
