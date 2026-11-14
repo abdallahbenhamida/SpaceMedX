@@ -1,13 +1,14 @@
+# app/enums/observation.py
 from enum import Enum
 
 class ObservationQuality(str, Enum):
-    VALID = "Valid"
-    QUESTIONABLE = "Questionable"
-    INVALID = "Invalid"
-    MISSING = "Missing"
+    VALID = "valid"
+    QUESTIONABLE = "questionable"
+    INVALID = "invalid"
+    MISSING = "missing"
 
 class ObservationSource(str, Enum):
-    SIMULATOR = "Simulator"
-    WEARABLE = "Wearable"
-    MANUAL = "Manual"
-    MEDICAL_DEVICE = "Medical Device"
+    SIMULATOR = "simulator"
+    WEARABLE = "wearable"
+    MANUAL = "manual"
+    MEDICAL_DEVICE = "medical_device"

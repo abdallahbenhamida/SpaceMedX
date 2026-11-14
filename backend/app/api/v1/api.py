@@ -3,7 +3,7 @@ from fastapi import APIRouter
 from app.api.v1.endpoints import (
     auth, users, medical, environment, emergency, 
     telemetry_ws, organizations, missions, subjects, 
-    devices, ingestion, sharing, audit, teams
+    devices, ingestion, sharing, audit, teams, observations
 )
 
 api_router = APIRouter()
@@ -21,3 +21,4 @@ api_router.include_router(ingestion.router)
 api_router.include_router(sharing.router)
 api_router.include_router(audit.router)
 api_router.include_router(teams.router)
+api_router.include_router(observations.router)
