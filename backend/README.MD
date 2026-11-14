@@ -39,7 +39,7 @@ Long-duration space mission health monitoring platform backend built with **Pyth
 
 ## Core Modules & API Endpoints
 
-All endpoints are versioned under `/api/v1`. Interactive Swagger documentation is available at `/docs` and ReDoc at `/redoc`.
+All REST and WebSocket endpoints are versioned under `/api/v1`. Interactive Swagger documentation is available at `/docs` and ReDoc at `/redoc`.
 
 ### 1. Authentication (`/api/v1/auth`)
 Handles user registration, identity creation, and credential validation.
@@ -100,6 +100,18 @@ Manages time-bound emergency access overrides and automatically logs compliance 
   - **Response (`200 OK`):** `EmergencyGrantResponse` (with `status: "revoked"`)
   - **Description:** Immediately revokes an active emergency access grant prior to expiration and records an `EMERGENCY_REVOKE` audit log entry.
 
+### 6. Real-Time Telemetry Streaming (`/api/v1/telemetry`)
+Provides live bidirectional WebSocket telemetry streaming and session persistence for mission control diagnostics.
+- **`WS /api/v1/telemetry/ws/{channel}`**
+  - **Auth Required:** Query Token (`?token=<jwt>&client_id=<str>`)
+  - **Channels:** `environment`, `medical`, `environmental`, `all` (subject to role-based access checks, e.g., medical streams restricted to authorized medical and control roles).
+  - **Description:** Establishes an asynchronous bidirectional WebSocket connection. Manages automated session recording in PostgreSQL, heartbeats, packet validation, and multi-client broadcasting.
+- **`GET /api/v1/telemetry/sessions`**
+  - **Auth Required:** Bearer Token (Restricted to `mission_control`, `mission_admin`, `org_admin`, or `sys_admin`)
+  - **Query Parameters:** `active_only` (boolean, default: `false`)
+  - **Response (`200 OK`):** List of `TelemetrySessionResponse` objects
+  - **Description:** Lists WebSocket telemetry stream sessions for mission control operator diagnostics and active connection tracking.
+
 ---
 
 ## Database & Migrations
@@ -127,6 +139,7 @@ To manage database schema revisions and inspect records:
     SELECT * FROM medical_records;
     SELECT * FROM environmental_telemetry;
     SELECT * FROM emergency_access_grants;
+    SELECT * FROM telemetry_stream_sessions;
     SELECT * FROM audit_logs;
     ```
 
@@ -134,7 +147,7 @@ To manage database schema revisions and inspect records:
 
 ## Testing
 
-The backend uses an asynchronous testing suite powered by `pytest` and `httpx`:
+The backend uses a robust test suite powered by `pytest`, `httpx`, and synchronous `TestClient` bindings for WebSockets:
 
 - **Run all backend tests inside Docker:**
   ```bash
@@ -185,7 +198,7 @@ To maintain strict type safety and a clean architecture across modules, SpaceMed
   - `deactivated` — Permanently disabled
   - `offline` — Local habitat caching / disconnected space-flight operations mode
 
-### 2. Environment & Location (`app.enums.environment`)
+### 2. Environment, Location (`app.enums.environment`)
 - **`MissionLocationType`**:
   - `space` — Deep space transit / orbital vessel
   - `moon` — Lunar surface base / outpost
@@ -197,16 +210,25 @@ To maintain strict type safety and a clean architecture across modules, SpaceMed
 - **`EnvironmentAlertLevel`**:
   - `nominal`, `warning`, `critical`, `emergency`
 
-### 3. Telemetry, Observations (`app.enums.observation`)
+### 3. Telemetry Channels, Events (`app.enums.telemetry`)
+- **`TelemetryChannel`**:
+  - `environment` — Habitat and life support sensor streams
+  - `medical` — Restricted crew medical telemetry and vitals
+  - `environmental` — Planetary and atmospheric telemetry
+  - `all` — Broadcast-all supervisory channel
+- **`StreamEventType`**:
+  - `connected`, `telemetry_update`, `heartbeat`, `error`, `disconnected`
+
+### 4. Observations (`app.enums.observation`)
 - **`ObservationQuality`**:
   - `Valid`, `Questionable`, `Invalid`, `Missing`
 - **`ObservationSource`**:
   - `Simulator`, `Wearable`, `Manual`, `Medical Device`
 
-### 4. Emergency Protocols (`app.enums.emergency`)
+### 5. Emergency Protocols (`app.enums.emergency`)
 - **`EmergencyGrantStatus`**:
   - `active`, `expired`, `revoked`
 
-### 5. Audit, Compliance (`app.enums.audit`)
+### 6. Audit, Compliance (`app.enums.audit`)
 - **`AuditAction`**:
   - `READ`, `CREATE`, `UPDATE`, `DELETE`, `SHARE`, `EXPORT`, `EMERGENCY_GRANT`, `EMERGENCY_REVOKE`

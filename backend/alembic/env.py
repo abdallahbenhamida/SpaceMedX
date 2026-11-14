@@ -15,6 +15,7 @@ from app.models.medical import MedicalRecord # noqa
 from app.models.environment import EnvironmentalTelemetry # noqa
 from app.models.emergency import EmergencyAccessGrant  # noqa
 from app.models.audit import AuditLog  # noqa
+from app.models.telemetry_session import TelemetryStreamSession  # noqa
 
 config = context.config
 

@@ -31,6 +31,14 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     to_encode.update({"exp": expire})
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
+def decode_access_token(token: str) -> dict | None:
+    """Decode and verify a JWT access token, returning the payload dict or None if invalid/expired."""
+    try:
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        return payload
+    except (jwt.PyJWTError, Exception):
+        return None
+
 async def get_current_user(
     token: str = Depends(oauth2_scheme), 
     db: AsyncSession = Depends(get_db)
@@ -41,15 +49,17 @@ async def get_current_user(
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
-    try:
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        user_id: str = payload.get("sub")
-        if user_id is None:
-            raise credentials_exception
-    except jwt.PyJWTError:
+    
+    payload = decode_access_token(token)
+    if payload is None or "sub" not in payload:
         raise credentials_exception
     
-    user = await db.get(User, UUID(user_id))
+    try:
+        user_uuid = UUID(payload.get("sub"))
+    except (ValueError, TypeError):
+        raise credentials_exception
+    
+    user = await db.get(User, user_uuid)
     if user is None:
         raise credentials_exception
     return user
