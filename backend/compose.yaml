@@ -1,0 +1,66 @@
+services:
+  spacemedx-proxy:
+    image: caddy:2-alpine
+    container_name: spacemedx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./proxy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      spacemedx-api:
+        condition: service_healthy
+    networks:
+      - public_net
+      - internal_net
+    restart: unless-stopped
+
+  spacemedx-api:
+    build:
+      context: ../backend
+      dockerfile: Dockerfile
+    container_name: spacemedx-api
+    env_file:
+      - .env
+    environment:
+      - DATABASE_URL=postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@spacemedx-db:5432/${POSTGRES_DB}
+    depends_on:
+      spacemedx-db:
+        condition: service_healthy
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+  spacemedx-db:
+    image: postgres:18-alpine   # https://hub.docker.com/_/postgres/
+    container_name: spacemedx-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-spacemedx}
+    ports:
+      - "5433:5432" # Mapped to 5433 on host to avoid local port conflict
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-spacemedx}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - internal_net
+    restart: unless-stopped
+
+networks:
+  public_net:
+    driver: bridge
+  internal_net:
+    driver: bridge
+    internal: true # Isolates DB and API from direct external routing
+
+volumes:
+  pgdata:
+  caddy_data:
+  caddy_config:
