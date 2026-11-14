@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
-from app.api.v1.endpoints import auth
+from app.api.v1.api import api_router  # Import the aggregated v1 router
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
@@ -21,8 +21,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Register v1 Authentication Router
-app.include_router(auth.router, prefix=settings.API_V1_STR)
+# Register the centralized API v1 router (includes auth, users, and medical)
+app.include_router(api_router, prefix=settings.API_V1_STR)
 
 @app.get("/health", tags=["System"])
 async def health_check():
@@ -32,7 +32,3 @@ async def health_check():
         "system": "SpaceMedx Backend",
         "version": "0.0.1"
     }
-
-# Future module routers will be included here:
-# from app.modules.observations.router import router as observations_router
-# app.include_router(observations_router, prefix=settings.API_V1_STR)

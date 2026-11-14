@@ -37,6 +37,42 @@ Long-duration space mission health monitoring platform backend built with **Pyth
 
 ---
 
+## Core Modules & API Endpoints
+
+All endpoints are versioned under `/api/v1`. Interactive Swagger documentation is available at `/docs` and ReDoc at `/redoc`.
+
+### 1. Authentication (`/api/v1/auth`)
+Handles user registration, identity creation, and credential validation.
+- **`POST /api/v1/auth/register`**
+  - **Payload:** `UserCreate` (email, password [min length 8], full_name, role)
+  - **Response (`201 Created`):** `UserResponse` (id, email, full_name, role, status, is_verified)
+  - **Description:** Registers a new crew member or system user with hashed passwords (bcrypt).
+- **`POST /api/v1/auth/login`**
+  - **Payload:** `LoginRequest` (email, password)
+  - **Response (`200 OK`):** `Token` (access_token, token_type: "bearer")
+  - **Description:** Authenticates user credentials and issues a signed JWT access token containing subject ID and role claims.
+
+### 2. User Profiles (`/api/v1/users`)
+Manages account identity and profile retrieval.
+- **`GET /api/v1/users/me`**
+  - **Auth Required:** Bearer Token (`get_current_user`)
+  - **Response (`200 OK`):** `UserResponse`
+  - **Description:** Retrieves the profile information of the currently authenticated user.
+
+### 3. Medical Telemetry & Records (`/api/v1/medical`)
+Monitors and logs crew health metrics, vitals, and clinical assessments.
+- **`POST /api/v1/medical/records`**
+  - **Auth Required:** Bearer Token (Restricted strictly to `medical_officer` role)
+  - **Payload:** `MedicalRecordCreate` (user_id, heart_rate, blood_pressure_systolic, blood_pressure_diastolic, oxygen_saturation, body_temperature, notes)
+  - **Response (`201 Created`):** `MedicalRecordResponse`
+  - **Description:** Logs a new health telemetry entry for a crew member. Validates clinical boundaries for vitals (heart rate, blood pressure, SpO2, and temperature).
+- **`GET /api/v1/medical/records/{user_id}`**
+  - **Auth Required:** Bearer Token (Accessible by the user themselves or a `medical_officer`)
+  - **Response (`200 OK`):** List of `MedicalRecordResponse` objects
+  - **Description:** Retrieves historical medical records for a specific crew member sorted in reverse chronological order.
+
+---
+
 ## Database & Migrations
 
 To manage database schema revisions and inspect records:
@@ -58,8 +94,8 @@ To manage database schema revisions and inspect records:
   * Inside `psql`:
     ```sql
     \dt          -- List all tables
-    \dt+         -- Detailed table view
     SELECT * FROM users;
+    SELECT * FROM medical_records;
     ```
 
 ---
@@ -97,7 +133,7 @@ The project includes a convenient Makefile for container orchestration:
 
 ## Domain Vocabulary (Enums Reference)
 
-To maintain strict type safety and a clean architecture across modules, SpaceMedx uses centralized enumerations located in `backend/app/enums/`:
+To maintain strict type safety and a clean architecture across modules, SpaceMedx uses centralized enumerations located in `app/enums/`:
 
 ### 1. User, Identity (`app.enums.user`)
 - **`UserRole`**:

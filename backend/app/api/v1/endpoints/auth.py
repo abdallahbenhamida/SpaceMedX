@@ -49,8 +49,3 @@ async def login(credentials: LoginRequest, db: AsyncSession = Depends(get_db)):
     
     access_token = create_access_token(data={"sub": str(user.id), "role": user.role.value})
     return {"access_token": access_token, "token_type": "bearer"}
-
-@router.get("/me", response_model=UserResponse)
-async def get_current_user_profile(current_user: User = Depends(get_current_user)):
-    """Return the profile of the currently authenticated user via JWT token."""
-    return current_user

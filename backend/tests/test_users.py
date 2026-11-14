@@ -27,9 +27,9 @@ async def test_get_current_user_profile(async_client):
     token_data = login_res.json()
     access_token = token_data["access_token"]
 
-    # 3. Access protected route with Bearer token
+    # 3. Access protected route with Bearer token (Updated path to /api/v1/users/me)
     response = await async_client.get(
-        "/api/v1/auth/me",  # Or your protected profile endpoint route
+        "/api/v1/users/me",
         headers={"Authorization": f"Bearer {access_token}"}
     )
     assert response.status_code == 200
@@ -40,5 +40,5 @@ async def test_get_current_user_profile(async_client):
 @pytest.mark.asyncio
 async def test_unauthorized_access(async_client):
     """Test that accessing a protected route without a token returns 401 Unauthorized."""
-    response = await async_client.get("/api/v1/auth/me")
+    response = await async_client.get("/api/v1/users/me")
     assert response.status_code == 401

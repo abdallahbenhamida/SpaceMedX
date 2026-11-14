@@ -11,6 +11,7 @@ from app.core.config import settings
 from app.core.database import Base
 # Import all models here so Alembic can autogenerate migrations for them
 from app.models.user import User  # noqa
+from app.models.medical import MedicalRecord # noqa
 
 config = context.config
 
