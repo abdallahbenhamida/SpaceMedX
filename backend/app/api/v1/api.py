@@ -1,6 +1,6 @@
 # app/api/v1/api.py
 from fastapi import APIRouter
-from app.api.v1.endpoints import auth, users, medical, environment, emergency, telemetry_ws, organizations, missions, subjects, devices
+from app.api.v1.endpoints import auth, users, medical, environment, emergency, telemetry_ws, organizations, missions, subjects, devices, ingestion
 
 api_router = APIRouter()
 api_router.include_router(auth.router)
@@ -13,3 +13,4 @@ api_router.include_router(organizations.router)
 api_router.include_router(missions.router)
 api_router.include_router(subjects.router)
 api_router.include_router(devices.router)
+api_router.include_router(ingestion.router)
