@@ -16,6 +16,7 @@ from app.models.environment import EnvironmentalTelemetry # noqa
 from app.models.emergency import EmergencyAccessGrant  # noqa
 from app.models.audit import AuditLog  # noqa
 from app.models.telemetry_session import TelemetryStreamSession  # noqa
+from app.models.mobile_sync import MobileMeasurementRecord # noqa
 
 config = context.config
 
