@@ -71,6 +71,19 @@ Monitors and logs crew health metrics, vitals, and clinical assessments.
   - **Response (`200 OK`):** List of `MedicalRecordResponse` objects
   - **Description:** Retrieves historical medical records for a specific crew member sorted in reverse chronological order.
 
+### 4. Habitat & Environmental Telemetry (`/api/v1/environment`)
+Tracks atmospheric composition, radiation exposure, and environmental conditions across space missions and surface bases.
+- **`POST /api/v1/environment/telemetry`**
+  - **Auth Required:** Bearer Token (Restricted to `medical_officer`, `mission_control`, `mission_admin`, `org_admin`, or `sys_admin`)
+  - **Payload:** `EnvironmentalTelemetryCreate` (location_type, location_identifier, metric_type, value, unit, alert_level, notes)
+  - **Response (`201 Created`):** `EnvironmentalTelemetryResponse`
+  - **Description:** Ingests real-time environmental sensor readings and alert levels for a habitat, spacecraft, or planetary outpost.
+- **`GET /api/v1/environment/telemetry`**
+  - **Auth Required:** Bearer Token (`get_current_user`)
+  - **Query Parameters:** `location_type` (optional), `location_identifier` (optional), `limit` (default: 50)
+  - **Response (`200 OK`):** List of `EnvironmentalTelemetryResponse` objects
+  - **Description:** Queries historical and active environmental telemetry filtered by location type or base identifier.
+
 ---
 
 ## Database & Migrations
@@ -96,6 +109,7 @@ To manage database schema revisions and inspect records:
     \dt          -- List all tables
     SELECT * FROM users;
     SELECT * FROM medical_records;
+    SELECT * FROM environmental_telemetry;
     ```
 
 ---
@@ -131,13 +145,21 @@ The project includes a convenient Makefile for container orchestration:
 
 ---
 
-## Domain Vocabulary (Enums Reference)
+## Domain Vocabulary & Enums Reference
 
 To maintain strict type safety and a clean architecture across modules, SpaceMedx uses centralized enumerations located in `app/enums/`:
 
 ### 1. User, Identity (`app.enums.user`)
 - **`UserRole`**:
-  - `system_admin`, `org_admin`, `mission_admin`, `team_leader`, `astronaut`, `medical_officer`, `researcher`, `mission_control`, `guest_viewer`
+  - `sys_admin` — System Administrator
+  - `org_admin` — Organization Administrator
+  - `mission_admin` — Mission Administrator
+  - `team_leader` — Team Leader
+  - `astronaut` — Crew Member / Astronaut
+  - `medical_officer` — Medical Officer
+  - `researcher` — Science & Research Officer
+  - `mission_control` — Ground Control Operator
+  - `guest_viewer` — Read-only Observer
 - **`AccountStatus`**:
   - `active` — Fully operational account
   - `invited` — Pending registration/activation
@@ -145,16 +167,28 @@ To maintain strict type safety and a clean architecture across modules, SpaceMed
   - `deactivated` — Permanently disabled
   - `offline` — Local habitat caching / disconnected space-flight operations mode
 
-### 2. Telemetry, Observations (`app.enums.observation`)
+### 2. Environment & Location (`app.enums.environment`)
+- **`MissionLocationType`**:
+  - `space` — Deep space transit / orbital vessel
+  - `moon` — Lunar surface base / outpost
+  - `planet` — Planetary surface (e.g., Mars, Titan)
+  - `habitat` — Orbital space station / ISS
+  - `asteroid` — Asteroid mining facility
+- **`EnvironmentalMetricType`**:
+  - `atmospheric_pressure`, `co2_level`, `o2_level`, `radiation_exposure`, `ambient_temperature`, `humidity`, `cabin_airflow`
+- **`EnvironmentAlertLevel`**:
+  - `nominal`, `warning`, `critical`, `emergency`
+
+### 3. Telemetry, Observations (`app.enums.observation`)
 - **`ObservationQuality`**:
   - `Valid`, `Questionable`, `Invalid`, `Missing`
 - **`ObservationSource`**:
   - `Simulator`, `Wearable`, `Manual`, `Medical Device`
 
-### 3. Emergency Protocols (`app.enums.emergency`)
+### 4. Emergency Protocols (`app.enums.emergency`)
 - **`EmergencyGrantStatus`**:
   - `active`, `expired`, `revoked`
 
-### 4. Audit, Compliance (`app.enums.audit`)
+### 5. Audit, Compliance (`app.enums.audit`)
 - **`AuditAction`**:
   - `READ`, `CREATE`, `UPDATE`, `DELETE`, `SHARE`, `EXPORT`, `EMERGENCY_GRANT`, `EMERGENCY_REVOKE`
