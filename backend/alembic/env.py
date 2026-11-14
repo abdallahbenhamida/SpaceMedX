@@ -13,6 +13,8 @@ from app.core.database import Base
 from app.models.user import User  # noqa
 from app.models.medical import MedicalRecord # noqa
 from app.models.environment import EnvironmentalTelemetry # noqa
+from app.models.emergency import EmergencyAccessGrant  # noqa
+from app.models.audit import AuditLog  # noqa
 
 config = context.config
 

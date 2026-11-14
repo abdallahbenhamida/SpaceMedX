@@ -84,6 +84,22 @@ Tracks atmospheric composition, radiation exposure, and environmental conditions
   - **Response (`200 OK`):** List of `EnvironmentalTelemetryResponse` objects
   - **Description:** Queries historical and active environmental telemetry filtered by location type or base identifier.
 
+### 5. Emergency Protocols & Override Grants (`/api/v1/emergency`)
+Manages time-bound emergency access overrides and automatically logs compliance audit trails (`AuditLog`) for space agency oversight.
+- **`POST /api/v1/emergency/grants`**
+  - **Auth Required:** Bearer Token (Restricted to `medical_officer`, `mission_admin`, `sys_admin`, or `org_admin`)
+  - **Payload:** `EmergencyGrantCreate` (grantee_id, reason [5–500 chars], duration_hours [default: 4, range: 1–72])
+  - **Response (`201 Created`):** `EmergencyGrantResponse` (id, grantor_id, grantee_id, reason, status, expires_at, created_at)
+  - **Description:** Issues a temporary emergency access override grant to a crew member or operator and records an `EMERGENCY_GRANT` audit log entry.
+- **`GET /api/v1/emergency/grants`**
+  - **Auth Required:** Bearer Token (Restricted to `medical_officer`, `mission_admin`, `sys_admin`, `org_admin`, or `mission_control`)
+  - **Response (`200 OK`):** List of `EmergencyGrantResponse` objects
+  - **Description:** Retrieves all issued emergency access grants ordered by creation timestamp descending.
+- **`PATCH /api/v1/emergency/grants/{grant_id}/revoke`**
+  - **Auth Required:** Bearer Token (Restricted to `medical_officer`, `mission_admin`, `sys_admin`, or `org_admin`)
+  - **Response (`200 OK`):** `EmergencyGrantResponse` (with `status: "revoked"`)
+  - **Description:** Immediately revokes an active emergency access grant prior to expiration and records an `EMERGENCY_REVOKE` audit log entry.
+
 ---
 
 ## Database & Migrations
@@ -110,6 +126,8 @@ To manage database schema revisions and inspect records:
     SELECT * FROM users;
     SELECT * FROM medical_records;
     SELECT * FROM environmental_telemetry;
+    SELECT * FROM emergency_access_grants;
+    SELECT * FROM audit_logs;
     ```
 
 ---
