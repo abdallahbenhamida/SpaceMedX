@@ -13,13 +13,12 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-# Install Python dependencies first (cached layer)
-COPY pyproject.toml .
-RUN pip install --no-cache-dir --upgrade pip && \
-    pip install --no-cache-dir .
-
-# Copy backend source code
+# Copy the entire backend workspace (pyproject.toml, app, tests, etc.)
 COPY . .
+
+# Install Python dependencies including development/test dependencies
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir ".[dev]"
 
 # Create and switch to a non-root user for container security
 RUN adduser --disabled-password --gecos "" appuser && chown -R appuser:appuser /app
