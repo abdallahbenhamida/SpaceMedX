@@ -141,7 +141,29 @@ Manages space flight missions, orbital outposts, and deep space exploration prog
   - **Response (`200 OK`):** List of `MissionResponse` objects
   - **Description:** Retrieves all missions accessible to the authenticated user.
 
-### 9. Research & Clinical Subjects (`/api/v1/subjects`)
+### 9. Teams & Crews (`/api/v1/teams`)
+Manages mission crews, squads, departments, team memberships, and time-bounded team leadership assignments.
+- **`POST /api/v1/teams`**
+  - **Auth Required:** Bearer Token (Restricted to `sys_admin`, `org_admin`, or `mission_admin`)
+  - **Payload:** `TeamCreate` (organization_id, mission_id, team_name, team_type, status)
+  - **Response (`201 Created`):** `TeamResponse` (id, organization_id, mission_id, team_name, team_type, status, created_at, updated_at)
+  - **Description:** Creates a new team, squad, or flight crew.
+- **`GET /api/v1/teams`**
+  - **Auth Required:** Bearer Token (`get_current_user`)
+  - **Response (`200 OK`):** List of `TeamResponse` objects
+  - **Description:** Retrieves all teams accessible to the authenticated user.
+- **`POST /api/v1/teams/memberships`**
+  - **Auth Required:** Bearer Token (Restricted to admin roles)
+  - **Payload:** `TeamMembershipCreate` (team_id, subject_id, valid_until)
+  - **Response (`201 Created`):** `TeamMembershipResponse`
+  - **Description:** Assigns a research or clinical subject to a team.
+- **`POST /api/v1/teams/leaderships`**
+  - **Auth Required:** Bearer Token (Restricted to admin roles)
+  - **Payload:** `TeamLeadershipCreate` (team_id, user_id, valid_until)
+  - **Response (`201 Created`):** `TeamLeadershipResponse`
+  - **Description:** Assigns a team leader for emergency oversight and team supervision.
+
+### 10. Research & Clinical Subjects (`/api/v1/subjects`)
 Tracks biological samples, human subjects, hardware components, and materials science specimens under study.
 - **`POST /api/v1/subjects`**
   - **Auth Required:** Bearer Token (Restricted to `system_admin`, `researcher`, or `medical_officer`)
@@ -153,7 +175,7 @@ Tracks biological samples, human subjects, hardware components, and materials sc
   - **Response (`200 OK`):** List of `SubjectResponse` objects
   - **Description:** Retrieves all research subjects accessible to the user.
 
-### 10. Hardware & Telemetry Devices (`/api/v1/devices`)
+### 11. Hardware & Telemetry Devices (`/api/v1/devices`)
 Catalogs hardware units, smart wearables, environmental sensors, and habitat controllers.
 - **`POST /api/v1/devices`**
   - **Auth Required:** Bearer Token (Restricted to `system_admin`, `mission_admin`, or `mission_control`)
@@ -165,7 +187,7 @@ Catalogs hardware units, smart wearables, environmental sensors, and habitat con
   - **Response (`200 OK`):** List of `DeviceResponse` objects
   - **Description:** Retrieves all registered hardware devices.
 
-### 11. Telemetry Ingestion Batches (`/api/v1/ingestion`)
+### 12. Telemetry Ingestion Batches (`/api/v1/ingestion`)
 Handles bulk ingestion of telemetry data packets and sensor logs from remote space assets.
 - **`POST /api/v1/ingestion/batch`**
   - **Auth Required:** Bearer Token (Restricted to `system_admin`, `mission_admin`, or `mission_control`)
@@ -177,7 +199,7 @@ Handles bulk ingestion of telemetry data packets and sensor logs from remote spa
   - **Response (`200 OK`):** List of `IngestionResponse` objects
   - **Description:** Retrieves all ingestion audit logs.
 
-### 12. Resource Sharing & Access (`/api/v1/sharing`)
+### 13. Resource Sharing & Access (`/api/v1/sharing`)
 Manages secure resource sharing (clinical records, telemetry streams, reports) between operators and crew.
 - **`POST /api/v1/sharing`**
   - **Auth Required:** Bearer Token (Restricted to `system_admin`, `org_admin`, `mission_admin`, or `medical_officer`)
@@ -189,7 +211,7 @@ Manages secure resource sharing (clinical records, telemetry streams, reports) b
   - **Response (`200 OK`):** List of `ResourceShareResponse` objects
   - **Description:** Retrieves all resource shares accessible or owned by the authenticated user.
 
-### 13. Security & Compliance Audit Logs (`/api/v1/audit`)
+### 14. Security & Compliance Audit Logs (`/api/v1/audit`)
 Provides immutable system-wide activity auditing for regulatory and space agency compliance.
 - **`GET /api/v1/audit/logs`**
   - **Auth Required:** Bearer Token (Restricted strictly to `system_admin`)
@@ -222,6 +244,9 @@ To manage database schema revisions and inspect records:
     SELECT * FROM users;
     SELECT * FROM organizations;
     SELECT * FROM missions;
+    SELECT * FROM teams;
+    SELECT * FROM team_memberships;
+    SELECT * FROM team_leaderships;
     SELECT * FROM subjects;
     SELECT * FROM devices;
     SELECT * FROM medical_records;
@@ -304,35 +329,39 @@ To maintain strict type safety and a clean architecture across modules, SpaceMed
 - **`MissionType`**: `lunar`, `mars`, `iss`, `deep_space`, `asteroid`
 - **`MissionStatus`**: `planned`, `active`, `completed`, `aborted`
 
-### 4. Subjects (`app.enums.subject`)
+### 4. Teams (`app.enums.team`)
+- **`TeamType`**: `squad`, `crew`, `group`, `department`
+- **`TeamStatus`**: `active`, `standby`, `disbanded`
+
+### 5. Subjects (`app.enums.subject`)
 - **`SubjectCategory`**: `human`, `biological_sample`, `materials_science`, `hardware_component`
 - **`SubjectStatus`**: `active`, `monitoring_complete`, `quarantined`, `archived`
 
-### 5. Devices (`app.enums.device`)
+### 6. Devices (`app.enums.device`)
 - **`DeviceType`**: `wearable`, `environmental_sensor`, `medical_diagnostic`, `habitat_controller`, `communication_relay`
 - **`DeviceStatus`**: `online`, `offline`, `maintenance`, `faulty`, `decommissioned`
 
-### 6. Ingestion (`app.enums.ingestion`)
+### 7. Ingestion (`app.enums.ingestion`)
 - **`IngestionFormat`**: `json`, `csv`, `binary`
 - **`IngestionStatus`**: `success`, `partial`, `failed`
 
-### 7. Sharing (`app.enums.sharing`)
+### 8. Sharing (`app.enums.sharing`)
 - **`SharedResourceType`**: `medical_record`, `telemetry`, `environmental_log`, `report`
 - **`SharingPermission`**: `read`, `export`, `full`
 
-### 8. Telemetry Channels, Events (`app.enums.telemetry`)
+### 9. Telemetry Channels, Events (`app.enums.telemetry`)
 - **`TelemetryChannel`**:
   - `environment`, `medical`, `environmental`, `all`
 - **`StreamEventType`**:
   - `connected`, `telemetry_update`, `heartbeat`, `error`, `disconnected`
 
-### 9. Observations (`app.enums.observation`)
+### 10. Observations (`app.enums.observation`)
 - **`ObservationQuality`**: `Valid`, `Questionable`, `Invalid`, `Missing`
-- **`ObservationSource`**: `Simulator`, `Wearable`, `Manual`, `Medical Device`
+- **`ObservationSource`**: `Simulator`, `Wearable`, `Medical Device`, `Manual`
 
-### 10. Emergency Protocols (`app.enums.emergency`)
+### 11. Emergency Protocols (`app.enums.emergency`)
 - **`EmergencyGrantStatus`**: `active`, `expired`, `revoked`
 
-### 11. Audit, Compliance (`app.enums.audit`)
+### 12. Audit, Compliance (`app.enums.audit`)
 - **`AuditAction`**:
   - `READ`, `CREATE`, `UPDATE`, `DELETE`, `SHARE`, `EXPORT`, `EMERGENCY_GRANT`, `EMERGENCY_REVOKE`
