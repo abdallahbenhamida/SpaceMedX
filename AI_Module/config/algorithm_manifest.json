@@ -1,0 +1,9 @@
+{
+  "algorithm_id": "SMX-DEMO-001",
+  "version": "1.0.0",
+  "kind": "PROCESSOR",
+  "output_type": "record_count",
+  "supported_modes": ["BATCH", "REPLAY"],
+  "validation_status": "SOFTWARE_VERIFIED",
+  "approved_for_operational_alerts": false
+}

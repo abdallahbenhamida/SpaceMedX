@@ -1,0 +1,14 @@
+{
+  "algorithm_id": "SMX-DEMO-001",
+  "version": "1.0.0",
+  "scope_id": "demo-scope",
+  "idempotency_key": "demo-request-001",
+  "configuration": {},
+  "manifest": {
+    "schema_version": "1.0.0",
+    "references": [
+      {"kind": "synthetic", "identifier": "fixture-001", "digest": "fixture-not-production"}
+    ],
+    "inline_payload": {}
+  }
+}
