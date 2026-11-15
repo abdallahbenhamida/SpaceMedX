@@ -12,7 +12,7 @@
 import { h, s, clear, modal, toast, statusPill, statusDot, avatar, sendWarningDialog, uploadDialog, journalDialog, questionnaireDialog } from '../ui.js';
 import { t, lang, onLanguageChange } from '../i18n.js';
 import { PARAMS, PARAM_BY_ID, SECTORS, paramName, BODY_POINTS } from '../params.js';
-import { evaluate, summarize, readinessStatus, rankFor, STATUS_COLOR } from '../scoring.js';
+import { evaluate, summarize, readinessStatus, rankFor, STATUS_COLOR, CATEGORIES, CATEGORY_ICON, CATEGORY_WEIGHTS, LINK_LIMITS } from '../scoring.js';
 import { formatDual, formatTime, relative, queryWindow, zoneLabel } from '../time.js';
 import { renderDisk } from '../components/diskChart.js';
 import { renderSuit } from '../components/suitView.js';
@@ -24,6 +24,11 @@ const MODES = { self: 'self', leader: 'leader', operator: 'operator', physician:
 // ---- tile catalogue ----------------------------------------------------------------
 const TILES = {
   readiness: { titleKey: 'tile.readiness', size: 's', modes: ['self', 'leader', 'operator', 'physician'] },
+  healthStatus: { titleKey: 'tile.healthStatus', size: 's', modes: ['self', 'leader', 'operator', 'physician'], category: 'health' },
+  mentalStatus: { titleKey: 'tile.mentalStatus', size: 's', modes: ['self', 'leader', 'operator', 'physician'], category: 'mental' },
+  envStatus: { titleKey: 'tile.envStatus', size: 's', modes: ['self', 'leader', 'operator', 'physician'], category: 'environment' },
+  locationStatus: { titleKey: 'tile.locationStatus', size: 's', modes: ['self', 'leader', 'operator', 'physician'], category: 'location' },
+  commStatus: { titleKey: 'tile.commStatus', size: 's', modes: ['self', 'leader', 'operator', 'physician'], category: 'communication' },
   suit: { titleKey: 'tile.suit', size: 't', modes: ['self', 'leader', 'operator', 'physician'] },
   disk: { titleKey: 'tile.disk', size: 'l', modes: ['self', 'leader', 'operator', 'physician'] },
   env: { titleKey: 'tile.env', size: 'm', modes: ['self', 'leader', 'operator', 'physician'] },
@@ -40,11 +45,12 @@ const TILES = {
   evaluation: { titleKey: 'tile.evaluation', size: 'm', modes: ['physician'] },
 };
 
+const STATUS_TILES = ['healthStatus', 'mentalStatus', 'envStatus', 'locationStatus', 'commStatus'];
 const DEFAULT_LAYOUT = {
-  self: ['suit', 'disk', 'readiness', 'inbox', 'trend', 'env', 'journal', 'questionnaires', 'privacy', 'media'],
-  leader: ['suit', 'disk', 'readiness', 'media', 'paramList', 'trend', 'journal', 'map'],
-  operator: ['suit', 'disk', 'readiness', 'media', 'paramList', 'env', 'trend', 'map'],
-  physician: ['suit', 'disk', 'readiness', 'evaluation', 'raw', 'ecg', 'trend', 'media', 'journal', 'env'],
+  self: ['suit', 'disk', 'readiness', 'inbox', ...STATUS_TILES, 'trend', 'env', 'journal', 'questionnaires', 'privacy', 'media'],
+  leader: ['suit', 'disk', 'readiness', 'media', ...STATUS_TILES, 'paramList', 'trend', 'journal', 'map'],
+  operator: ['suit', 'disk', 'readiness', 'media', ...STATUS_TILES, 'paramList', 'env', 'trend', 'map'],
+  physician: ['suit', 'disk', 'readiness', 'evaluation', ...STATUS_TILES, 'raw', 'ecg', 'trend', 'media', 'journal', 'env'],
 };
 
 let tileSeq = 0;
@@ -57,11 +63,11 @@ const newTile = (type, opts) => ({ key: `${type}-${Date.now().toString(36)}-${ti
 export function renderUserDashboard(host, ctx) {
   const { api, config, viewer, subjectId, mode } = ctx;
   const showValues = mode === MODES.physician || config.privacy?.showRawValuesToNonPhysicians;
-  const layoutKey = `shm_layout_${mode}_${viewer.id}`;
+  const layoutKey = `shm_layout_v2_${mode}_${viewer.id}`;
   let layout = loadLayout();
   const state = { user: null, latest: null, inbox: [], consents: [], journal: [], attachments: [], evaluations: [], questionnaires: [], sentConsents: [] };
   const tileEls = new Map();
-  let timers = [], destroyed = false;
+  let timers = [], destroyed = false, maximizedKey = null;
 
   const root = h('div', { class: 'dash' });
   const head = h('div', { class: 'dash-head' });
@@ -94,7 +100,7 @@ export function renderUserDashboard(host, ctx) {
   }
 
   async function refreshLatest() {
-    try { state.latest = await api.latest(subjectId); renderHead(); rerender(['readiness', 'disk', 'suit', 'env', 'paramList', 'raw', 'map']); } catch (e) { console.warn(e); }
+    try { state.latest = await api.latest(subjectId); renderHead(); rerender(['readiness', 'disk', 'suit', 'env', 'paramList', 'raw', 'map', ...STATUS_TILES]); } catch (e) { console.warn(e); }
   }
   async function refreshInbox() {
     try {
@@ -102,6 +108,7 @@ export function renderUserDashboard(host, ctx) {
       state.inbox = await api.inbox(subjectId);
       const fresh = state.inbox.filter(w => !before.has(w.id) && !w.ack);
       fresh.forEach(w => toast(`⚠ ${w.fromName}: ${w.message}`, w.level === 'crit' ? 'crit' : 'warn', 7000));
+      if (fresh.length) refreshLatest(); // unacknowledged warnings affect the communication status
       state.consents = await api.listConsents(subjectId);
       renderHead(); rerender(['inbox', 'privacy']);
     } catch (e) { console.warn(e); }
@@ -111,7 +118,7 @@ export function renderUserDashboard(host, ctx) {
   function renderHead() {
     clear(head);
     const u = state.user; if (!u || !state.latest) return;
-    const sum = summarize(state.latest.values);
+    const sum = summarize(state.latest);
     const locked = Object.values(state.latest.values).filter(v => v.locked).length;
     const tz = state.latest.timezone;
     const left = h('div', { class: 'who' },
@@ -161,13 +168,16 @@ export function renderUserDashboard(host, ctx) {
   // ---- grid -----------------------------------------------------------------------------------
   function renderGrid() {
     clear(grid); tileEls.clear();
+    if (maximizedKey && !layout.some(x => x.key === maximizedKey)) { maximizedKey = null; backdrop.remove(); document.body.classList.remove('has-max-tile'); }
     layout.forEach((tile, idx) => {
       const def = TILES[tile.type];
       const body = h('div', { class: 'tile-body' });
       const extra = h('div', { class: 'tile-extra' });
-      const el = h('section', { class: `tile size-${def.size} tile-${tile.type}`, draggable: 'true', 'data-key': tile.key },
-        h('header', { class: 'tile-head' }, h('h4', {}, t(def.titleKey)), extra,
-          h('button', { class: 'icon-btn', title: t('tiles.remove'), onclick: () => { layout = layout.filter(x => x.key !== tile.key); saveLayout(); renderGrid(); } }, '✕')),
+      const isMax = maximizedKey === tile.key;
+      const el = h('section', { class: `tile size-${def.size} tile-${tile.type}${isMax ? ' maximized' : ''}`, draggable: isMax ? 'false' : 'true', 'data-key': tile.key },
+        h('header', { class: 'tile-head', ondblclick: e => { if (!e.target.closest('button, select, input')) toggleMax(tile.key); } }, h('h4', {}, t(def.titleKey)), extra,
+          h('button', { class: 'icon-btn tile-max', title: isMax ? t('tiles.restore') : t('tiles.maximize'), 'aria-pressed': String(isMax), onclick: () => toggleMax(tile.key) }, isMax ? '⤡' : '⤢'),
+          h('button', { class: 'icon-btn', title: t('tiles.remove'), onclick: () => { if (maximizedKey === tile.key) setMax(null); layout = layout.filter(x => x.key !== tile.key); saveLayout(); renderGrid(); } }, '✕')),
         body);
       el.addEventListener('dragstart', e => { e.dataTransfer.setData('text/plain', tile.key); el.classList.add('dragging'); });
       el.addEventListener('dragend', () => el.classList.remove('dragging'));
@@ -180,11 +190,33 @@ export function renderUserDashboard(host, ctx) {
         const [m] = layout.splice(from, 1); layout.splice(idx, 0, m); saveLayout(); renderGrid();
       });
       grid.append(el);
-      tileEls.set(tile.key, { tile, body, extra });
+      tileEls.set(tile.key, { tile, body, extra, el });
       renderTile(tile.key);
     });
     grid.append(h('button', { class: 'tile tile-add size-s', onclick: addTileDialog }, h('span', { class: 'plus' }, '+'), h('span', {}, t('tiles.add'))));
   }
+
+  // ---- maximise / restore a tile ---------------------------------------------------------------
+  // The tile is lifted out of the grid into a full-window overlay,
+  // then re-rendered so charts, disks and maps lay out for the new size.
+  const backdrop = h('div', { class: 'tile-backdrop', onclick: () => setMax(null) });
+  function setMax(key) {
+    const prev = maximizedKey; maximizedKey = key;
+    for (const k of [prev, key]) {
+      const e = k && tileEls.get(k); if (!e) continue;
+      const on = k === maximizedKey;
+      e.el.classList.toggle('maximized', on);
+      e.el.draggable = !on;
+      const btn = e.el.querySelector('.tile-max');
+      btn.textContent = on ? '⤡' : '⤢'; btn.title = on ? t('tiles.restore') : t('tiles.maximize'); btn.setAttribute('aria-pressed', String(on));
+    }
+    if (key) root.append(backdrop); else backdrop.remove();
+    document.body.classList.toggle('has-max-tile', !!key);
+    for (const k of new Set([prev, key])) if (k) renderTile(k);
+  }
+  function toggleMax(key) { setMax(maximizedKey === key ? null : key); }
+  const onKey = e => { if (e.key === 'Escape' && maximizedKey && !document.querySelector('.modal-back')) setMax(null); };
+  document.addEventListener('keydown', onKey);
 
   function rerender(types) { for (const [key, { tile }] of tileEls) if (types.includes(tile.type)) renderTile(key); }
 
@@ -220,21 +252,35 @@ export function renderUserDashboard(host, ctx) {
 
   const RENDER = {
     readiness(body) {
-      const sum = summarize(latestValues());
+      const sum = summarize(state.latest);
       const st = readinessStatus(sum.readiness);
       const streak = 1 + (hashStr(subjectId) % 9);
       const rank = rankFor(sum.readiness, streak);
       const g = h('div', { class: 'gauge-host' }); gauge(g, { value: sum.readiness, status: st, label: t('ready.short') });
       const msg = st === 'ok' ? t('ready.ok') : st === 'warn' ? t('ready.warn') : st === 'crit' ? t('ready.crit') : t('common.noData');
+      // Readiness = weighted mean of the five category statuses (a critical one caps it at 45)
+      const breakdown = h('div', { class: 'cat-breakdown' }, CATEGORIES.map(c => {
+        const x = sum.categories[c];
+        const tile = STATUS_TILES.find(k => TILES[k].category === c);
+        return h('button', { class: `cat-row st-${x.status}`, title: `${t('ready.weight')}: ${Math.round(CATEGORY_WEIGHTS[c] * 100)}%`, onclick: () => focusTile(tile) },
+          h('span', { class: 'cat-ic' }, CATEGORY_ICON[c]), h('span', { class: 'cat-name' }, t('cat.' + c)),
+          h('span', { class: 'meter' }, h('i', { style: { width: `${x.score ?? 0}%`, background: STATUS_COLOR[x.status] } })),
+          h('span', { class: 'cat-score' }, x.score ?? '–'));
+      }));
       body.append(h('div', { class: 'readiness' }, g,
         h('div', { class: 'ready-info' },
           h('div', { class: `ready-msg st-${st}` }, msg),
-          h('div', { class: 'counts' }, h('span', { class: 'c-ok' }, `● ${sum.counts.ok}`), h('span', { class: 'c-warn' }, `▲ ${sum.counts.warn}`), h('span', { class: 'c-crit' }, `■ ${sum.counts.crit}`)),
           h('div', { class: 'rank' }, h('b', {}, t(rank.rankKey)), ` · ${t('ready.level')} ${rank.level}`),
-          h('div', { class: 'xp' }, h('div', { class: 'xp-bar' }, h('span', { style: { width: `${Math.min(100, ((rank.xp % 400) / 400) * 100)}%` } })), h('small', {}, `${rank.xp} XP · 🔥 ${t('ready.streak', { n: streak })}`)))));
+          h('div', { class: 'xp' }, h('div', { class: 'xp-bar' }, h('span', { style: { width: `${Math.min(100, ((rank.xp % 400) / 400) * 100)}%` } })), h('small', {}, `${rank.xp} XP · 🔥 ${t('ready.streak', { n: streak })}`)))),
+        breakdown);
     },
+    healthStatus: (body) => categoryTile(body, 'health'),
+    mentalStatus: (body) => categoryTile(body, 'mental'),
+    envStatus: (body) => categoryTile(body, 'environment'),
+    locationStatus: (body) => categoryTile(body, 'location'),
+    commStatus: (body) => categoryTile(body, 'communication'),
     disk(body) {
-      const sum = summarize(latestValues());
+      const sum = summarize(state.latest);
       const host = h('div', { class: 'disk-host' }); body.append(host);
       renderDisk(host, { latest: latestValues(), showValues, onSelect: openParam, center: { value: sum.readiness ?? '–', status: readinessStatus(sum.readiness), label: t('ready.short') } });
       body.append(legend());
@@ -291,7 +337,7 @@ export function renderUserDashboard(host, ctx) {
         .catch(e => host.append(h('p', { class: 'muted' }, e.message)));
     },
     map(body) {
-      const l = state.latest; const sum = summarize(l.values);
+      const l = state.latest; const sum = summarize(l);
       const host = h('div', { class: 'map-host' }); body.append(host);
       renderMap(host, { frame: l.frame, points: [{ ...l.location, label: state.user.name, sub: l.location.module || `${l.location.lat}, ${l.location.lon}`, short: state.user.name.split(' ')[0], avatar: state.user.avatar, color: state.user.color, status: sum.overall, time: formatDual(new Date(), l.timezone, lang()) }] });
     },
@@ -320,7 +366,7 @@ export function renderUserDashboard(host, ctx) {
         h('div', { class: 'li-top' }, h('span', { class: `pill pill-${w.level === 'info' ? 'none' : w.level}` }, t('level.' + w.level)), h('b', {}, w.fromName || '?'), h('span', { class: 'muted small' }, relative(w.time, lang()))),
         w.parameter ? h('div', { class: 'small' }, paramName(w.parameter, lang())) : null,
         h('div', { class: 'li-text' }, w.message),
-        w.ack ? h('div', { class: 'muted small' }, '✓ ' + t('inbox.acked')) : h('button', { class: 'btn sm', onclick: async () => { await api.ackWarning(w.id); w.ack = true; renderHead(); rerender(['inbox']); } }, t('inbox.ack')))));
+        w.ack ? h('div', { class: 'muted small' }, '✓ ' + t('inbox.acked')) : h('button', { class: 'btn sm', onclick: async () => { await api.ackWarning(w.id); w.ack = true; renderHead(); rerender(['inbox']); refreshLatest(); } }, t('inbox.ack')))));
       body.append(list);
     },
     privacy(body) {
@@ -374,6 +420,58 @@ export function renderUserDashboard(host, ctx) {
     },
   };
 
+  // Scroll to (or add) the status tile of a category, from the readiness breakdown.
+  function focusTile(type) {
+    let entry = [...tileEls.values()].find(e => e.tile.type === type);
+    if (!entry) { layout.push(newTile(type)); saveLayout(); renderGrid(); entry = [...tileEls.values()].find(e => e.tile.type === type); }
+    entry?.el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    entry?.el.classList.add('flash'); setTimeout(() => entry?.el.classList.remove('flash'), 1200);
+  }
+
+  const HAZARD_ORDER = { health: ['body'], mental: ['isolation', 'mood', 'cognition'], environment: ['radiation', 'gravity', 'habitat'] };
+
+  function categoryTile(body, cat) {
+    const sum = summarize(state.latest);
+    const c = sum.categories[cat];
+    const g = h('div', { class: 'gauge-host' }); gauge(g, { value: c.score, status: c.status, label: t('cat.short.' + cat), size: 120 });
+    const msg = c.status === 'none' ? t('common.noData') : t(`cat.msg.${c.status}`);
+    const head = h('div', { class: 'cat-head' }, g, h('div', { class: 'ready-info' },
+      h('div', { class: `ready-msg st-${c.status}` }, CATEGORY_ICON[cat], ' ', msg),
+      c.counts && c.kind === 'params' ? h('div', { class: 'counts' }, h('span', { class: 'c-ok' }, `● ${c.counts.ok}`), h('span', { class: 'c-warn' }, `▲ ${c.counts.warn}`), h('span', { class: 'c-crit' }, `■ ${c.counts.crit}`)) : null,
+      h('div', { class: 'muted small' }, t('cat.info.' + cat))));
+    const list = h('div', { class: 'plist scroll cat-list' });
+    if (c.kind === 'params') {
+      const params = PARAMS.filter(p => p.category === cat);
+      const order = HAZARD_ORDER[cat] || [];
+      const hazards = [...new Set([...order, ...params.map(p => p.hazard)])].filter(hz => params.some(p => p.hazard === hz));
+      for (const hz of hazards) {
+        if (hazards.length > 1) list.append(h('div', { class: 'plist-sec' }, t('hazard.' + hz)));
+        params.filter(p => p.hazard === hz).forEach(p => list.append(paramRow(p)));
+      }
+    } else {
+      const l = state.latest, tz = l.timezone;
+      const row = (label, value, st) => h('div', { class: `prow st-${st || 'none'}` }, statusDot(st || 'none'), h('span', { class: 'prow-name' }, label), h('span', { class: 'prow-score' }, value));
+      if (cat === 'location') {
+        const it = c.items[0];
+        const pos = l.location ? (l.location.module ? `${l.location.module}${l.location.x != null ? ` (${l.location.x}, ${l.location.y})` : ''}` : `${l.location.lat}, ${l.location.lon}`) : '–';
+        list.append(
+          row(t('loc.lastFix'), it?.time ? relative(it.time, lang()) : t('loc.never'), it?.status),
+          row(t('loc.time'), it?.time ? formatDual(it.time, tz, lang()) : '–'),
+          row(t('loc.position'), `${t('map.' + l.frame)} · ${pos}`),
+          h('div', { class: 'muted small pad-t' }, t('link.limits', { ok: LINK_LIMITS.location.ok, warn: LINK_LIMITS.location.warn })));
+      } else if (cat === 'communication') {
+        const [last, un] = c.items;
+        list.append(
+          row(t('comm.lastContact'), last?.time ? relative(last.time, lang()) : t('loc.never'), last?.status),
+          row(t('comm.lastTime'), last?.time ? formatDual(last.time, tz, lang()) : '–'),
+          row(t('comm.unacked'), un ? (un.count ? `${un.count} · ${relative(un.time, lang())}` : '0') : '–', un?.status),
+          h('div', { class: 'muted small pad-t' }, t('link.limits', { ok: LINK_LIMITS.communication.ok, warn: LINK_LIMITS.communication.warn }), ' ', t('comm.unackedRule', { n: LINK_LIMITS.communication.unackedWarnMin })));
+      }
+      if (c.status === 'none') list.append(h('p', { class: 'muted' }, t('link.noInfo')));
+    }
+    body.append(head, list);
+  }
+
   function paramRow(p) {
     const m = latestValues()[p.id]; const ev = m?.v != null ? evaluate(p, m.v) : null;
     return h('button', { class: `prow st-${ev?.status || 'none'}`, onclick: () => openParam(p.id) },
@@ -409,7 +507,7 @@ export function renderUserDashboard(host, ctx) {
   })();
 
   return {
-    destroy() { destroyed = true; timers.forEach(clearInterval); offLang(); },
+    destroy() { destroyed = true; timers.forEach(clearInterval); offLang(); document.removeEventListener('keydown', onKey); document.body.classList.remove('has-max-tile'); },
     refresh: async () => { await loadAll(); renderHead(); renderGrid(); },
     get user() { return state.user; },
     setUser(u) { state.user = u; renderHead(); rerender(['suit', 'map']); },

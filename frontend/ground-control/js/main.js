@@ -8,14 +8,14 @@
 //  • warnings to Team Leaders or directly to individuals
 // =============================================================================
 import { startApp } from '../../common/js/appShell.js';
-import { renderTeamView, alertItems } from '../../common/js/views/teamView.js';
+import { renderTeamView, alertItems, categoryChips } from '../../common/js/views/teamView.js';
 import { renderUserDashboard } from '../../common/js/views/userDashboard.js';
 import { renderMap } from '../../common/js/components/mapView.js';
 import { Disk3D } from '../../common/js/components/disk3d.js';
 import { renderDisk } from '../../common/js/components/diskChart.js';
 import { h, clear, statusPill, toast, sendWarningDialog } from '../../common/js/ui.js';
 import { t, lang, onLanguageChange } from '../../common/js/i18n.js';
-import { summarize, averageLatest, readinessStatus, STATUS_COLOR } from '../../common/js/scoring.js';
+import { summarize, averageLatest, averageReadiness, averageCategories, readinessStatus, STATUS_COLOR } from '../../common/js/scoring.js';
 import { paramName } from '../../common/js/params.js';
 import { formatTime, formatDual, relative, zoneLabel } from '../../common/js/time.js';
 
@@ -62,29 +62,30 @@ startApp({
 
       const disk = new Disk3D(d3host, { onSelect: i => { selected = i; drawSel(); } });
       const layers = () => {
-        const L = teams.map(tm => { const avg = averageLatest(tm.members.map(m => latestById[m.id]?.values || {})); return { id: tm.id, name: tm.name, color: tm.color, latest: avg, badge: summarize(avg).readiness, team: tm }; });
+        const L = teams.map(tm => { const avg = averageLatest(tm.members.map(m => latestById[m.id]?.values || {})); return { id: tm.id, name: tm.name, color: tm.color, latest: avg, badge: averageReadiness(tm.members.map(m => latestById[m.id])), team: tm }; });
         const all = averageLatest(everyone.map(m => latestById[m.id]?.values || {}));
-        L.push({ id: 'all', name: t('gc.overall'), color: '#ffffff', latest: all, badge: summarize(all).readiness });
+        L.push({ id: 'all', name: t('gc.overall'), color: '#ffffff', latest: all, badge: averageReadiness(everyone.map(m => latestById[m.id])) });
         return L;
       };
       const drawSel = () => {
         clear(selPanel);
         const L = layers()[selected];
         if (!L) { selPanel.append(h('h3', {}, t('team.selectedLayer')), h('p', { class: 'muted' }, t('team.selectHint'))); return; }
-        const d = h('div', { class: 'disk-host' }); const sum = summarize(L.latest);
+        const d = h('div', { class: 'disk-host' }); const sum = { readiness: L.badge };
         selPanel.append(h('div', { class: 'row row-between' }, h('h3', {}, `${t('team.selectedLayer')}: ${L.name}`), L.team ? h('button', { class: 'btn sm', onclick: () => showTeam(L.team) }, t('gc.openTeam')) : null), d);
         renderDisk(d, { latest: L.latest, showValues: mode === 'physician', center: { value: sum.readiness ?? '–', status: readinessStatus(sum.readiness), label: t('ready.short') } });
       };
       const drawCards = () => {
         clear(cards);
         teams.forEach(tm => {
-          const sum = summarize(averageLatest(tm.members.map(m => latestById[m.id]?.values || {})));
-          const crit = tm.members.filter(m => summarize(latestById[m.id]?.values || {}).counts.crit).length;
+          const sum = { readiness: averageReadiness(tm.members.map(m => latestById[m.id])) };
+          const crit = tm.members.filter(m => summarize(latestById[m.id] || {}).counts.crit).length;
           cards.append(h('button', { class: 'card', onclick: () => showTeam(tm) },
             h('div', { class: 'card-top' }, h('span', { class: 'd3-dot', style: { background: tm.color, width: '14px', height: '14px' } }),
               h('div', {}, h('div', { class: 'card-name' }, tm.name), h('div', { class: 'card-sub' }, `${t('map.' + tm.frame)} · ${zoneLabel(tm.timezone)} ${formatTime(new Date(), { zone: tm.timezone, withDate: false, lang: lang() })}`)),
               h('div', { class: `card-score st-${readinessStatus(sum.readiness)}` }, sum.readiness ?? '–')),
-            h('div', { class: 'mini-bars' }, tm.members.map(m => h('i', { style: { background: STATUS_COLOR[summarize(latestById[m.id]?.values || {}).overall] }, title: m.name }))),
+            categoryChips(averageCategories(tm.members.map(m => latestById[m.id]))),
+            h('div', { class: 'mini-bars' }, tm.members.map(m => h('i', { style: { background: STATUS_COLOR[summarize(latestById[m.id] || {}).overall] }, title: m.name }))),
             h('div', { class: 'small muted' }, `${tm.members.length} ${t('team.membersShort')}`, crit ? h('span', { style: { color: 'var(--crit)', marginLeft: '8px' } }, `■ ${crit} ${t('gc.critMembers')}`) : null)));
         });
         clear(alerts);
@@ -128,7 +129,7 @@ startApp({
       const ls = await Promise.all(everyone.map(u => api.latest(u.id)));
       const host = h('div', { class: 'map-host big' });
       clear(main).append(h('div', { class: 'section-title' }, h('h2', {}, t('nav.map'))), h('div', { class: 'panel' }, host));
-      renderMap(host, { frame: 'earth', points: everyone.map((u, i) => ({ ...ls[i].location, label: `${u.name} (${teams.find(x => x.id === u.teamId)?.name})`, short: u.name.split(' ')[0], avatar: u.avatar, group: teams.find(x => x.id === u.teamId)?.name, sub: ls[i].location.module || `${ls[i].location.lat}, ${ls[i].location.lon}`, color: u.color, status: summarize(ls[i].values).overall, time: formatDual(new Date(), ls[i].timezone, lang()), user: u })), onSelect: p => showMember(p.user, teams.find(x => x.id === p.user.teamId)) });
+      renderMap(host, { frame: 'earth', points: everyone.map((u, i) => ({ ...ls[i].location, label: `${u.name} (${teams.find(x => x.id === u.teamId)?.name})`, short: u.name.split(' ')[0], avatar: u.avatar, group: teams.find(x => x.id === u.teamId)?.name, sub: ls[i].location.module || `${ls[i].location.lat}, ${ls[i].location.lon}`, color: u.color, status: summarize(ls[i]).overall, time: formatDual(new Date(), ls[i].timezone, lang()), user: u })), onSelect: p => showMember(p.user, teams.find(x => x.id === p.user.teamId)) });
     }
 
     // ---- messages ------------------------------------------------------------------------------------------

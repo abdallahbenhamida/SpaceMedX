@@ -37,6 +37,17 @@ const en = {
   'team.disk3d': 'Team health disks (3D)', 'team.members': 'Crew members', 'team.membersShort': 'members', 'team.alerts': 'Alerts', 'team.noAlerts': 'No alerts — everyone is in the green', 'team.average': 'Team average', 'team.avgReadiness': 'Avg. readiness', 'team.allLayers': 'All layers', 'team.layer': 'Layer', 'team.spacing': 'Spacing', 'team.showAverage': 'Average layer', 'team.hint3d': 'Drag to rotate · scroll to zoom · click a disk to select it', 'team.selectedLayer': 'Selected layer', 'team.selectHint': 'Click a disk in the 3D view (or pick a layer) to examine it here.', 'team.openProfile': 'Open profile', 'team.none': 'You are not assigned to a team.',
   'msg.inbox': 'Received', 'msg.sent': 'Sent', 'msg.read': 'Read', 'msg.unread': 'Not read yet', 'msg.compose': 'New warning',
   'gc.title': 'Mission overview', 'gc.teams': 'teams', 'gc.aggregate3d': 'Aggregate health disks (3D)', 'gc.hintAgg': 'One layer per team average + overall average on top. Click a disk to select it.', 'gc.allTeams': 'All teams', 'gc.overall': 'Overall average', 'gc.openTeam': 'Open team', 'gc.critMembers': 'critical', 'gc.warnLeader': 'Warn Team Leader',
+  'tile.healthStatus': 'Health status', 'tile.mentalStatus': 'Mental health status', 'tile.envStatus': 'Environmental status', 'tile.locationStatus': 'Location status', 'tile.commStatus': 'Communication status',
+  'tiles.maximize': 'Maximize', 'tiles.restore': 'Restore size (Esc)', 'ready.weight': 'Weight in mission readiness',
+  'cat.health': 'Health', 'cat.mental': 'Mental health', 'cat.environment': 'Environment', 'cat.location': 'Location', 'cat.communication': 'Communication',
+  'cat.short.health': 'health', 'cat.short.mental': 'mental', 'cat.short.environment': 'environment', 'cat.short.location': 'location', 'cat.short.communication': 'comms',
+  'cat.msg.ok': 'Nominal', 'cat.msg.warn': 'Needs attention', 'cat.msg.crit': 'Critical',
+  'cat.info.health': 'Score of the physiological parameters.', 'cat.info.mental': 'Mood, cognition, isolation and confinement.', 'cat.info.environment': 'Space radiation, gravity fields and habitat life support.', 'cat.info.location': 'Are we receiving position data?', 'cat.info.communication': 'Can we reach the crew member?',
+  'hazard.body': 'Physiology', 'hazard.isolation': 'Isolation and confinement', 'hazard.mood': 'Mood', 'hazard.cognition': 'Cognition', 'hazard.radiation': 'Space radiation', 'hazard.gravity': 'Gravity fields', 'hazard.habitat': 'Habitat / life support',
+  'loc.lastFix': 'Last position fix', 'loc.time': 'Received at', 'loc.position': 'Position', 'loc.never': 'no data',
+  'comm.lastContact': 'Last contact', 'comm.lastTime': 'Contact time', 'comm.unacked': 'Unacknowledged warnings', 'comm.unackedRule': 'A warning unacknowledged for more than {n} min lowers the status.',
+  'link.limits': 'OK up to {ok} min, warning up to {warn} min.', 'link.noInfo': 'No link information for this view.', 'source.mission': 'Mission log',
+  'q.confinement.title': 'Isolation & confinement', 'q.confinement.note': 'Over the last week: 0 = not at all … 3 = nearly every day.', 'q.confinement.c1': 'Felt cramped or lacked privacy', 'q.confinement.c2': 'Missed family and friends', 'q.confinement.c3': 'Had friction with crewmates',
 };
 
 const hu = {
@@ -76,6 +87,17 @@ const hu = {
   'team.disk3d': 'Csapat egészség-diszkek (3D)', 'team.members': 'Csapattagok', 'team.membersShort': 'fő', 'team.alerts': 'Riasztások', 'team.noAlerts': 'Nincs riasztás — mindenki zöldben', 'team.average': 'Csapatátlag', 'team.avgReadiness': 'Átl. készültség', 'team.allLayers': 'Minden réteg', 'team.layer': 'Réteg', 'team.spacing': 'Távolság', 'team.showAverage': 'Átlag réteg', 'team.hint3d': 'Húzás: forgatás · görgő: zoom · kattintás: réteg kiválasztása', 'team.selectedLayer': 'Kiválasztott réteg', 'team.selectHint': 'Kattints egy diszkre a 3D nézetben (vagy válassz réteget) a részletes vizsgálathoz.', 'team.openProfile': 'Adatlap megnyitása', 'team.none': 'Nem vagy csapathoz rendelve.',
   'msg.inbox': 'Beérkezett', 'msg.sent': 'Elküldött', 'msg.read': 'Elolvasva', 'msg.unread': 'Még nem olvasta', 'msg.compose': 'Új figyelmeztetés',
   'gc.title': 'Küldetés-áttekintés', 'gc.teams': 'csapat', 'gc.aggregate3d': 'Összesített egészség-diszkek (3D)', 'gc.hintAgg': 'Rétegenként egy csapatátlag, legfelül a teljes átlag. Kattints egy diszkre a kiválasztáshoz.', 'gc.allTeams': 'Összes csapat', 'gc.overall': 'Teljes átlag', 'gc.openTeam': 'Csapat megnyitása', 'gc.critMembers': 'kritikus', 'gc.warnLeader': 'Csapatvezető figyelmeztetése',
+  'tile.healthStatus': 'Egészségi állapot', 'tile.mentalStatus': 'Mentális egészség', 'tile.envStatus': 'Környezeti állapot', 'tile.locationStatus': 'Helymeghatározás', 'tile.commStatus': 'Kommunikáció',
+  'tiles.maximize': 'Kinagyítás', 'tiles.restore': 'Visszakicsinyítés (Esc)', 'ready.weight': 'Súly a bevetési készültségben',
+  'cat.health': 'Egészség', 'cat.mental': 'Mentális egészség', 'cat.environment': 'Környezet', 'cat.location': 'Helyzet', 'cat.communication': 'Kommunikáció',
+  'cat.short.health': 'egészség', 'cat.short.mental': 'mentális', 'cat.short.environment': 'környezet', 'cat.short.location': 'helyzet', 'cat.short.communication': 'kapcsolat',
+  'cat.msg.ok': 'Rendben', 'cat.msg.warn': 'Figyelmet igényel', 'cat.msg.crit': 'Kritikus',
+  'cat.info.health': 'A fiziológiai paraméterekből számolt pontszám.', 'cat.info.mental': 'Hangulat, kogníció, elszigeteltség és bezártság.', 'cat.info.environment': 'Űrsugárzás, gravitációs terek és az élőhely életfenntartása.', 'cat.info.location': 'Kapunk-e adatot a tartózkodási helyéről?', 'cat.info.communication': 'Tudunk-e vele kommunikálni?',
+  'hazard.body': 'Fiziológia', 'hazard.isolation': 'Elszigeteltség és bezártság', 'hazard.mood': 'Hangulat', 'hazard.cognition': 'Kogníció', 'hazard.radiation': 'Űrsugárzás', 'hazard.gravity': 'Gravitációs terek', 'hazard.habitat': 'Élőhely / életfenntartás',
+  'loc.lastFix': 'Utolsó helyadat', 'loc.time': 'Beérkezett', 'loc.position': 'Pozíció', 'loc.never': 'nincs adat',
+  'comm.lastContact': 'Utolsó kapcsolat', 'comm.lastTime': 'Kapcsolat ideje', 'comm.unacked': 'Nyugtázatlan figyelmeztetések', 'comm.unackedRule': 'A {n} percnél régebben nyugtázatlan figyelmeztetés rontja az állapotot.',
+  'link.limits': 'Rendben {ok} percig, figyelmeztetés {warn} percig.', 'link.noInfo': 'Ebben a nézetben nincs kapcsolati adat.', 'source.mission': 'Küldetésnapló',
+  'q.confinement.title': 'Elszigeteltség és bezártság', 'q.confinement.note': 'Az elmúlt héten: 0 = egyáltalán nem … 3 = szinte minden nap.', 'q.confinement.c1': 'Szűkösnek éreztem a teret, hiányzott a magánszféra', 'q.confinement.c2': 'Hiányzott a család és a barátok', 'q.confinement.c3': 'Súrlódásom volt a társaimmal',
 };
 
 const ru = {
@@ -115,6 +137,17 @@ const ru = {
   'team.disk3d': 'Диски здоровья группы (3D)', 'team.members': 'Члены экипажа', 'team.membersShort': 'чел.', 'team.alerts': 'Тревоги', 'team.noAlerts': 'Тревог нет — все в зелёной зоне', 'team.average': 'Среднее по группе', 'team.avgReadiness': 'Ср. готовность', 'team.allLayers': 'Все слои', 'team.layer': 'Слой', 'team.spacing': 'Расстояние', 'team.showAverage': 'Слой среднего', 'team.hint3d': 'Перетаскивание — вращение · колесо — масштаб · клик — выбор диска', 'team.selectedLayer': 'Выбранный слой', 'team.selectHint': 'Щёлкните по диску в 3D, чтобы рассмотреть его здесь.', 'team.openProfile': 'Открыть профиль', 'team.none': 'Вы не назначены в группу.',
   'msg.inbox': 'Входящие', 'msg.sent': 'Отправленные', 'msg.read': 'Прочитано', 'msg.unread': 'Не прочитано', 'msg.compose': 'Новое предупреждение',
   'gc.title': 'Обзор миссии', 'gc.teams': 'групп', 'gc.aggregate3d': 'Сводные диски здоровья (3D)', 'gc.hintAgg': 'Слой на каждую группу (среднее) и общий средний сверху.', 'gc.allTeams': 'Все группы', 'gc.overall': 'Общее среднее', 'gc.openTeam': 'Открыть группу', 'gc.critMembers': 'критично', 'gc.warnLeader': 'Предупредить командира',
+  'tile.healthStatus': 'Состояние здоровья', 'tile.mentalStatus': 'Психическое здоровье', 'tile.envStatus': 'Состояние среды', 'tile.locationStatus': 'Местоположение', 'tile.commStatus': 'Связь',
+  'tiles.maximize': 'Развернуть', 'tiles.restore': 'Свернуть (Esc)', 'ready.weight': 'Вес в готовности',
+  'cat.health': 'Здоровье', 'cat.mental': 'Психика', 'cat.environment': 'Среда', 'cat.location': 'Местоположение', 'cat.communication': 'Связь',
+  'cat.short.health': 'здоровье', 'cat.short.mental': 'психика', 'cat.short.environment': 'среда', 'cat.short.location': 'место', 'cat.short.communication': 'связь',
+  'cat.msg.ok': 'Норма', 'cat.msg.warn': 'Требует внимания', 'cat.msg.crit': 'Критично',
+  'cat.info.health': 'Оценка физиологических параметров.', 'cat.info.mental': 'Настроение, когнитивные функции, изоляция и замкнутость.', 'cat.info.environment': 'Космическая радиация, гравитация и системы жизнеобеспечения.', 'cat.info.location': 'Получаем ли мы данные о местоположении?', 'cat.info.communication': 'Можем ли мы связаться с членом экипажа?',
+  'hazard.body': 'Физиология', 'hazard.isolation': 'Изоляция и замкнутость', 'hazard.mood': 'Настроение', 'hazard.cognition': 'Когнитивные функции', 'hazard.radiation': 'Космическая радиация', 'hazard.gravity': 'Гравитация', 'hazard.habitat': 'Жизнеобеспечение',
+  'loc.lastFix': 'Последние координаты', 'loc.time': 'Получено', 'loc.position': 'Позиция', 'loc.never': 'нет данных',
+  'comm.lastContact': 'Последний контакт', 'comm.lastTime': 'Время контакта', 'comm.unacked': 'Неподтверждённые предупреждения', 'comm.unackedRule': 'Предупреждение без подтверждения дольше {n} мин снижает статус.',
+  'link.limits': 'Норма до {ok} мин, предупреждение до {warn} мин.', 'link.noInfo': 'Нет данных о связи для этого вида.', 'source.mission': 'Журнал миссии',
+  'q.confinement.title': 'Изоляция и замкнутость', 'q.confinement.note': 'За последнюю неделю: 0 = совсем нет … 3 = почти каждый день.', 'q.confinement.c1': 'Тесно, не хватает уединения', 'q.confinement.c2': 'Скучаю по семье и друзьям', 'q.confinement.c3': 'Были трения с экипажем',
 };
 
 const ja = {
@@ -142,6 +175,8 @@ const ja = {
   'team.disk3d': 'チーム健康ディスク (3D)', 'team.members': 'メンバー', 'team.alerts': 'アラート', 'team.average': 'チーム平均', 'team.selectedLayer': '選択したレイヤー', 'team.openProfile': 'プロフィールを開く',
   'msg.inbox': '受信', 'msg.sent': '送信済み',
   'gc.title': 'ミッション概要', 'gc.allTeams': '全チーム', 'gc.overall': '全体平均', 'gc.openTeam': 'チームを開く', 'gc.warnLeader': 'リーダーに警告',
+  'tile.healthStatus': '健康状態', 'tile.mentalStatus': 'メンタルヘルス', 'tile.envStatus': '環境状態', 'tile.locationStatus': '位置情報', 'tile.commStatus': '通信状態', 'tiles.maximize': '最大化', 'tiles.restore': '元に戻す (Esc)',
+  'cat.health': '健康', 'cat.mental': 'メンタル', 'cat.environment': '環境', 'cat.location': '位置', 'cat.communication': '通信',
 };
 
 const fr = {
@@ -169,6 +204,8 @@ const fr = {
   'team.disk3d': "Disques de santé de l'équipe (3D)", 'team.members': 'Membres', 'team.alerts': 'Alertes', 'team.average': "Moyenne de l'équipe", 'team.selectedLayer': 'Couche sélectionnée', 'team.openProfile': 'Ouvrir le profil',
   'msg.inbox': 'Reçus', 'msg.sent': 'Envoyés',
   'gc.title': 'Vue de la mission', 'gc.allTeams': 'Toutes les équipes', 'gc.overall': 'Moyenne globale', 'gc.openTeam': "Ouvrir l'équipe", 'gc.warnLeader': 'Alerter le chef',
+  'tile.healthStatus': 'État de santé', 'tile.mentalStatus': 'Santé mentale', 'tile.envStatus': 'État environnemental', 'tile.locationStatus': 'Localisation', 'tile.commStatus': 'Communication', 'tiles.maximize': 'Agrandir', 'tiles.restore': 'Réduire (Échap)',
+  'cat.health': 'Santé', 'cat.mental': 'Santé mentale', 'cat.environment': 'Environnement', 'cat.location': 'Localisation', 'cat.communication': 'Communication',
 };
 
 const de = {
@@ -196,6 +233,8 @@ const de = {
   'team.disk3d': 'Team-Gesundheitsscheiben (3D)', 'team.members': 'Mitglieder', 'team.alerts': 'Alarme', 'team.average': 'Teamdurchschnitt', 'team.selectedLayer': 'Gewählte Ebene', 'team.openProfile': 'Profil öffnen',
   'msg.inbox': 'Empfangen', 'msg.sent': 'Gesendet',
   'gc.title': 'Missionsübersicht', 'gc.allTeams': 'Alle Teams', 'gc.overall': 'Gesamtdurchschnitt', 'gc.openTeam': 'Team öffnen', 'gc.warnLeader': 'Teamleiter warnen',
+  'tile.healthStatus': 'Gesundheitszustand', 'tile.mentalStatus': 'Psychische Gesundheit', 'tile.envStatus': 'Umweltstatus', 'tile.locationStatus': 'Ortung', 'tile.commStatus': 'Kommunikation', 'tiles.maximize': 'Maximieren', 'tiles.restore': 'Verkleinern (Esc)',
+  'cat.health': 'Gesundheit', 'cat.mental': 'Psyche', 'cat.environment': 'Umwelt', 'cat.location': 'Ortung', 'cat.communication': 'Kommunikation',
 };
 
 const it = {
@@ -223,6 +262,8 @@ const it = {
   'team.disk3d': 'Dischi salute della squadra (3D)', 'team.members': 'Membri', 'team.alerts': 'Allarmi', 'team.average': 'Media squadra', 'team.selectedLayer': 'Livello selezionato', 'team.openProfile': 'Apri profilo',
   'msg.inbox': 'Ricevuti', 'msg.sent': 'Inviati',
   'gc.title': 'Panoramica missione', 'gc.allTeams': 'Tutte le squadre', 'gc.overall': 'Media generale', 'gc.openTeam': 'Apri squadra', 'gc.warnLeader': 'Avvisa il capo squadra',
+  'tile.healthStatus': 'Stato di salute', 'tile.mentalStatus': 'Salute mentale', 'tile.envStatus': 'Stato ambientale', 'tile.locationStatus': 'Localizzazione', 'tile.commStatus': 'Comunicazione', 'tiles.maximize': 'Ingrandisci', 'tiles.restore': 'Riduci (Esc)',
+  'cat.health': 'Salute', 'cat.mental': 'Salute mentale', 'cat.environment': 'Ambiente', 'cat.location': 'Posizione', 'cat.communication': 'Comunicazione',
 };
 
 export const LOCALES = { en, hu, ru, ja, fr, de, it };

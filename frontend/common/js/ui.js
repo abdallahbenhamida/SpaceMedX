@@ -217,7 +217,7 @@ export async function questionnaireDialog(api, user, q) {
     return field(t(it.key), inp);
   });
   const priv = h('input', { type: 'checkbox', checked: q.id === 'mood' });
-  const note = q.id === 'mood' ? h('p', { class: 'field-hint' }, t('q.mood.note')) : null;
+  const note = q.id === 'mood' ? h('p', { class: 'field-hint' }, t('q.mood.note')) : q.id === 'confinement' ? h('p', { class: 'field-hint' }, t('q.confinement.note')) : null;
   return modal(t(q.titleKey), h('div', { class: 'form' }, note, rows, h('label', { class: 'check' }, priv, h('span', {}, t('upload.private')))), { actions: [{ label: t('common.submit'), onClick: async () => {
     const answers = {};
     for (const [id, { it, inp }] of Object.entries(inputs)) {
@@ -229,7 +229,7 @@ export async function questionnaireDialog(api, user, q) {
       const [bh, bm] = answers.bed.split(':').map(Number), [wh, wm] = answers.wake.split(':').map(Number);
       let mins = (wh * 60 + wm) - (bh * 60 + bm); if (mins < 0) mins += 1440;
       derived = { parameter: 'sleepTime', value: +(mins / 60).toFixed(2) };
-    } else if (q.id === 'mood') derived = { parameter: 'moodScore', value: Object.values(answers).reduce((a, b) => a + b, 0) };
+    } else if (q.parameter) derived = { parameter: q.parameter, value: Object.values(answers).reduce((a, b) => a + Number(b || 0), 0) };
     await api.submitQuestionnaire({ userId: user.id, questionnaireId: q.id, time: new Date().toISOString(), timezone: viewerZone(), answers, derived, private: priv.checked });
     toast(t('q.saved'), 'ok');
     return true;

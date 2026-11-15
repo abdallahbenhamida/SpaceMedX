@@ -80,9 +80,16 @@ See `samples/` for complete examples.
 ```json
 { "userId": "u-102", "timezone": "LTC", "frame": "moon",
   "location": { "frame": "moon", "lat": -89.41, "lon": -137.6 },
+  "locationTime": "2026-11-14T12:55:00Z",
+  "comm": { "lastContact": "2026-11-14T12:55:00Z", "unackedWarnings": 1, "oldestUnackedAt": "2026-11-14T12:10:00Z" },
   "values": { "heartRate": { "v": 82, "t": "2026-11-14T12:55:00Z", "private": false },
               "moodScore": { "v": null, "t": "…", "private": true, "locked": true } } }
 ```
+
+* `locationTime` — time of the newest personal measurement that carried `source.location` (null = no position data). Drives the **Location status** (OK ≤ 15 min, warning ≤ 60 min).
+* `comm` — `lastContact` is the newest data the person produced (personal measurement, journal entry, questionnaire, warning acknowledgement — habitat telemetry does not count); `unackedWarnings` / `oldestUnackedAt` describe warnings sent to the person and not yet acknowledged. Drives the **Communication status** (OK ≤ 10 min, warning ≤ 60 min; a warning unacknowledged for > 30 min also lowers it).
+* Mission readiness = weighted mean of five category statuses (`scoring.js`): Health 35 %, Mental health 20 %, Environmental 20 % (space radiation, gravity fields, habitat), Location 10 %, Communication 15 %; any critical category caps it at 45.
+* New parameters: `gravity` (g), `reducedGravityDays`, `isolationDays` (days), `confinementStress` (0–9, from the weekly `confinement` questionnaire).
 
 ### Other objects
 

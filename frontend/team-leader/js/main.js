@@ -52,7 +52,7 @@ startApp({
       const ls = await Promise.all(members.map(m => api.latest(m.id)));
       const host = h('div', { class: 'map-host big' });
       clear(main).append(h('div', { class: 'section-title' }, h('h2', {}, t('nav.map'))), h('div', { class: 'panel' }, host));
-      renderMap(host, { frame: ls[0]?.frame, points: members.map((m, i) => ({ ...ls[i].location, label: m.name, short: m.name.split(' ')[0], avatar: m.avatar, group: team?.name, sub: ls[i].location.module || `${ls[i].location.lat}, ${ls[i].location.lon}`, color: m.color, status: summarize(ls[i].values).overall, time: formatDual(new Date(), ls[i].timezone, lang()), user: m })), onSelect: p => showMember(p.user) });
+      renderMap(host, { frame: ls[0]?.frame, points: members.map((m, i) => ({ ...ls[i].location, label: m.name, short: m.name.split(' ')[0], avatar: m.avatar, group: team?.name, sub: ls[i].location.module || `${ls[i].location.lat}, ${ls[i].location.lon}`, color: m.color, status: summarize(ls[i]).overall, time: formatDual(new Date(), ls[i].timezone, lang()), user: m })), onSelect: p => showMember(p.user) });
     }
 
     async function showMessages() {

@@ -73,12 +73,33 @@ const ANOMALIES = {
 };
 
 const ENV_BY_FRAME = {
-  moon: { radDoseRate: 58, radDoseMission: 210, cabinTemp: 21.5, humidity: 38, co2: 2900, ppO2: 21.0, cabinPressure: 70.3, noise: 52 },
-  station: { radDoseRate: 21, radDoseMission: 96, cabinTemp: 22.8, humidity: 52, co2: 2400, ppO2: 21.3, cabinPressure: 101.3, noise: 58 },
-  earth: { radDoseRate: 0.12, radDoseMission: 1.1, cabinTemp: 22, humidity: 45, co2: 650, ppO2: 21.2, cabinPressure: 101.0, noise: 42 },
+  moon: { gravity: 0.166, radDoseRate: 50, radDoseMission: 210, cabinTemp: 21.5, humidity: 38, co2: 2900, ppO2: 21.0, cabinPressure: 70.3, noise: 52 },
+  station: { gravity: 0, radDoseRate: 21, radDoseMission: 96, cabinTemp: 22.8, humidity: 52, co2: 2400, ppO2: 21.3, cabinPressure: 101.3, noise: 58 },
+  earth: { gravity: 1, radDoseRate: 0.12, radDoseMission: 1.1, cabinTemp: 22, humidity: 45, co2: 650, ppO2: 21.2, cabinPressure: 101.0, noise: 42 },
 };
 
+// Mission start (isolation & reduced-gravity exposure are counted from here).
+// ISS: Soyuz MS-29 crew launched 2026-07-14, SpaceX Crew-13 2026-10-01.
+// Moon base / Earth analog are fictional scenarios.
+const MISSION_START = {
+  'team-moon': '2026-10-20T00:00:00Z', 'team-earth': '2026-11-03T08:00:00Z', 'team-iss': '2026-10-01T00:00:00Z',
+  'u-201': '2026-07-14T00:00:00Z', 'u-202': '2026-07-14T00:00:00Z', 'u-203': '2026-07-14T00:00:00Z',
+};
+const userTeam = id => PEOPLE.find(p => p[0] === id)?.[2];
+/** Mission-derived parameters (exposure counters, gravity) — exact, no sensor noise. */
+function missionValue(userId, p, frame, tMs = Date.now()) {
+  if (p.id === 'gravity') return ENV_BY_FRAME[frame]?.gravity ?? 1;
+  if (p.id !== 'isolationDays' && p.id !== 'reducedGravityDays') return null;
+  if (p.id === 'reducedGravityDays' && frame === 'earth') return 0;
+  const start = Date.parse(MISSION_START[userId] || MISSION_START[userTeam(userId)] || '2026-11-01T00:00:00Z');
+  return Math.max(0, (tMs - start) / 86400e3);
+}
+
+// Link problems shown in the demo: minutes since the last position fix / last contact.
+const LINK_STALE = { 'u-104': { location: 40 }, 'u-303': { contact: 25 } };
+
 function baseline(userId, p, frame) {
+  const mv = missionValue(userId, p, frame); if (mv != null) return mv;
   if (ANOMALIES[userId]?.[p.id] != null) return ANOMALIES[userId][p.id];
   if (p.env) {
     // Moon pressure is a habitat-specific 70 kPa atmosphere: treat as ok there.
@@ -89,8 +110,10 @@ function baseline(userId, p, frame) {
   return mid + (r() - 0.5) * half * 1.3;
 }
 
-function jitter(p, seedStr, tBucket, amp = 0.06) {
+function jitter(p, seedStr, tBucket, amp = 0.06, base = null) {
   const r = rng(hash(seedStr + tBucket));
+  // Environment readings fluctuate relative to their level (near-zero radiation stays near zero).
+  if (p.env && base != null) return (r() - 0.5) * Math.abs(base) * amp;
   const span = (p.ok[1] - p.ok[0]) || (p.axis[1] - p.axis[0]) * 0.1;
   return (r() - 0.5) * span * amp * 2;
 }
@@ -98,7 +121,7 @@ function jitter(p, seedStr, tBucket, amp = 0.06) {
 function round(p, v) {
   const span = p.axis[1] - p.axis[0];
   const dec = span <= 0.1 ? 3 : span <= 10 ? 2 : span <= 200 ? 1 : 0;
-  return Number(v.toFixed(dec));
+  return Number(Math.max(p.axis[0], Math.min(p.axis[1], v)).toFixed(dec));
 }
 
 function locationFor(team, userId, rnd = Math.random) {
@@ -201,16 +224,28 @@ export class MockApi {
     const bucket = Math.floor(Date.now() / 15000);
     const priv = this.privateSet(userId, db), canPriv = this.canSeePrivate(userId, db);
     const values = {};
+    const stale = LINK_STALE[userId] || {};
+    const contactAt = Date.now() - (stale.contact ? stale.contact * 60e3 : 5000);
     for (const p of PARAMS) {
-      let v = baseline(userId, p, team.frame) + (p.mode === 'continuous' ? jitter(p, userId + p.id, bucket) : 0);
+      const exact = missionValue(userId, p, team.frame) != null;
+      const b0 = baseline(userId, p, team.frame);
+      let v = b0 + (p.mode === 'continuous' && !exact ? jitter(p, userId + p.id, bucket, 0.06, b0) : 0);
       if (p.id === 'cabinPressure' && team.frame === 'moon') v = 99.5; // normalised for habitat
-      let t = new Date(p.mode === 'continuous' ? Date.now() - 5000 : Date.now() - (1 + (hash(userId + p.id) % 40)) * 3600e3).toISOString();
+      let t = new Date(p.mode === 'continuous' ? (p.env ? Date.now() - 5000 : contactAt) : Date.now() - (1 + (hash(userId + p.id) % 40)) * 3600e3).toISOString();
       const up = db.uploads.filter(x => x.userId === userId && x.parameter === p.id).sort((a, b) => b.lastT.localeCompare(a.lastT))[0];
       if (up) { v = up.lastV; t = up.lastT; }
       const isPriv = priv.has(p.id);
       values[p.id] = isPriv && !canPriv ? { v: null, t, private: true, locked: true } : { v: round(p, v), t, private: isPriv };
     }
-    return this.delay({ userId, timezone: team.timezone, frame: team.frame, location: locationFor(team, userId), values });
+    // Link status: newest position fix and last contact (any data or acknowledgement from the person)
+    const locationTime = new Date(stale.location ? Date.now() - stale.location * 60e3 : contactAt).toISOString();
+    const mine = db.warnings.filter(w => w.toId === userId);
+    const acks = mine.filter(w => w.ack && w.ackTime).map(w => Date.parse(w.ackTime));
+    const ups = db.uploads.filter(x => x.userId === userId).map(x => Date.parse(x.lastT));
+    const lastContact = new Date(Math.max(contactAt, ...acks, ...ups.filter(x => x <= Date.now()))).toISOString();
+    const unacked = mine.filter(w => !w.ack).sort((a, b) => a.time.localeCompare(b.time));
+    const comm = { lastContact, unackedWarnings: unacked.length, oldestUnackedAt: unacked[0]?.time || null };
+    return this.delay({ userId, timezone: team.timezone, frame: team.frame, location: locationFor(team, userId), locationTime, comm, values });
   }
 
   async measurements(userId, parameter, win = {}) {
@@ -224,9 +259,11 @@ export class MockApi {
     const stepMs = p.mode === 'continuous' ? 10 * 60e3 : 6 * 3600e3;
     const samples = [];
     const base = baseline(userId, p, team.frame);
+    const exact = missionValue(userId, p, team.frame) != null;
     for (let t = from; t <= to; t += stepMs) {
+      if (exact) { samples.push({ t: new Date(t).toISOString(), v: round(p, missionValue(userId, p, team.frame, t)) }); continue; }
       const daily = Math.sin((t / 86400e3) * Math.PI * 2) * ((p.ok[1] - p.ok[0]) * 0.12);
-      samples.push({ t: new Date(t).toISOString(), v: round(p, base + daily + jitter(p, userId + p.id, Math.floor(t / stepMs), 0.1)) });
+      samples.push({ t: new Date(t).toISOString(), v: round(p, base + (p.env ? 0 : daily) + jitter(p, userId + p.id, Math.floor(t / stepMs), 0.1, base)) });
     }
     const uploaded = db.uploads.filter(x => x.userId === userId && x.parameter === parameter).flatMap(x => x.samples);
     const loc = locationFor(team, userId);
@@ -293,6 +330,9 @@ export class MockApi {
         { id: 'm1', type: 'scale', min: 0, max: 3, key: 'q.mood.m1' }, { id: 'm2', type: 'scale', min: 0, max: 3, key: 'q.mood.m2' },
         { id: 'm3', type: 'scale', min: 0, max: 3, key: 'q.mood.m3' }, { id: 'm4', type: 'scale', min: 0, max: 3, key: 'q.mood.m4' },
         { id: 'm5', type: 'scale', min: 0, max: 3, key: 'q.mood.m5' } ] },
+      { id: 'confinement', titleKey: 'q.confinement.title', parameter: 'confinementStress', frequency: 'weekly', items: [
+        { id: 'c1', type: 'scale', min: 0, max: 3, key: 'q.confinement.c1' }, { id: 'c2', type: 'scale', min: 0, max: 3, key: 'q.confinement.c2' },
+        { id: 'c3', type: 'scale', min: 0, max: 3, key: 'q.confinement.c3' } ] },
     ]);
   }
   async submitQuestionnaire(resp) {
@@ -330,4 +370,3 @@ export class MockApi {
   async listEvaluations(userId) { return this.delay(this.db.evaluations.filter(e => e.userId === userId).sort((a, b) => b.time.localeCompare(a.time))); }
 }
 
-export function resetMockStore() { localStorage.removeItem(STORE_KEY); }

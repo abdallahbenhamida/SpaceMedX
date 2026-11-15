@@ -9,7 +9,9 @@
 //   ok   : [lo, hi]        healthy (green)
 //   warn : [lo, hi]        warning (yellow); outside this → critical (red)
 // mode   : 'continuous' (wearable stream) | 'single' (lab / periodic check)
-// source : 'sensor' | 'questionnaire' | 'journal' | 'lab' | 'environment'
+// source : 'sensor' | 'questionnaire' | 'journal' | 'lab' | 'environment' | 'mission'
+// category: 'health' | 'mental' | 'environment' (default: env → environment, else health)
+// hazard : sub-group inside the category (radiation, gravity, habitat, isolation, …)
 // clinical: true → raw value / detail is physician-only at Ground Control
 // disk: false → shown in the Environment panel only (keeps sector XII readable)
 // =============================================================================
@@ -44,8 +46,11 @@ export const PARAMS = [
   { id: 'coreTemp', sector: 3, name: { en: 'Core temperature', hu: 'Maghőmérséklet', ru: 'Температура ядра' }, unit: '°C', axis: [34, 41], ok: [36.1, 37.5], warn: [35.5, 38.3], mode: 'continuous', source: 'sensor', body: 'head', clinical: false },
   // IV. Nervous
   { id: 'reactionTime', sector: 4, name: { en: 'Reaction time', hu: 'Reakcióidő', ru: 'Время реакции' }, unit: 'ms', axis: [100, 700], ok: [180, 320], warn: [150, 420], mode: 'single', source: 'lab', body: 'head', clinical: false },
-  { id: 'cognitiveScore', sector: 4, name: { en: 'Cognitive test', hu: 'Kognitív teszt', ru: 'Когнитивный тест' }, unit: 'pts', axis: [0, 100], ok: [70, 100], warn: [55, 100], mode: 'single', source: 'questionnaire', body: 'head', clinical: false },
-  { id: 'moodScore', sector: 4, name: { en: 'Mood screening', hu: 'Hangulat-szűrő', ru: 'Скрининг настроения' }, unit: 'pts', axis: [0, 15], ok: [0, 4], warn: [0, 9], mode: 'single', source: 'questionnaire', body: 'head', clinical: true },
+  { id: 'cognitiveScore', sector: 4, category: 'mental', hazard: 'cognition', name: { en: 'Cognitive test', hu: 'Kognitív teszt', ru: 'Когнитивный тест' }, unit: 'pts', axis: [0, 100], ok: [70, 100], warn: [55, 100], mode: 'single', source: 'questionnaire', body: 'head', clinical: false },
+  { id: 'moodScore', sector: 4, category: 'mental', hazard: 'mood', name: { en: 'Mood screening', hu: 'Hangulat-szűrő', ru: 'Скрининг настроения' }, unit: 'pts', axis: [0, 15], ok: [0, 4], warn: [0, 9], mode: 'single', source: 'questionnaire', body: 'head', clinical: true },
+  // Isolation & confinement (mental health)
+  { id: 'isolationDays', sector: 4, category: 'mental', hazard: 'isolation', name: { en: 'Isolation duration', hu: 'Elszigeteltség időtartama', ru: 'Длительность изоляции' }, unit: 'days', axis: [0, 540], ok: [0, 180], warn: [0, 365], mode: 'continuous', source: 'mission', body: 'head', clinical: false },
+  { id: 'confinementStress', sector: 4, category: 'mental', hazard: 'isolation', name: { en: 'Confinement stress', hu: 'Bezártsági stressz', ru: 'Стресс замкнутого пространства' }, unit: 'pts', axis: [0, 9], ok: [0, 3], warn: [0, 6], mode: 'single', source: 'questionnaire', body: 'head', clinical: false },
   // V. Circulatory
   { id: 'heartRate', sector: 5, name: { en: 'Heart rate', hu: 'Pulzus', ru: 'ЧСС' }, unit: 'bpm', axis: [30, 200], ok: [55, 100], warn: [45, 130], mode: 'continuous', source: 'sensor', body: 'chest', clinical: false },
   { id: 'systolic', sector: 5, name: { en: 'Systolic BP', hu: 'Szisztolés vérnyomás', ru: 'Систолическое АД' }, unit: 'mmHg', axis: [70, 200], ok: [100, 130], warn: [90, 150], mode: 'continuous', source: 'sensor', body: 'armL', clinical: false },
@@ -71,15 +76,27 @@ export const PARAMS = [
   // XII. External & derived (incl. environment)
   { id: 'sleepTime', sector: 12, name: { en: 'Sleeping time', hu: 'Alvásidő', ru: 'Время сна' }, unit: 'h', axis: [0, 12], ok: [6.5, 9], warn: [5.5, 10], mode: 'single', source: 'questionnaire', body: 'head', clinical: false },
   { id: 'sittingTime', sector: 12, name: { en: 'Sitting time', hu: 'Ülési idő', ru: 'Время сидя' }, unit: 'h/day', axis: [0, 16], ok: [0, 8], warn: [0, 11], mode: 'continuous', source: 'sensor', body: 'waist', clinical: false },
-  { id: 'radDoseRate', sector: 12, name: { en: 'Radiation dose rate', hu: 'Sugárzási dózisteljesítmény', ru: 'Мощность дозы' }, unit: 'µSv/h', axis: [0, 120], ok: [0, 30], warn: [0, 60], mode: 'continuous', source: 'environment', body: 'shoulderL', clinical: false, env: true },
-  { id: 'radDoseMission', sector: 12, name: { en: 'Mission dose', hu: 'Kumulált küldetésdózis', ru: 'Накопленная доза' }, unit: 'mSv', axis: [0, 600], ok: [0, 150], warn: [0, 400], mode: 'continuous', source: 'environment', body: 'shoulderL', clinical: false, env: true },
+  { id: 'radDoseRate', sector: 12, hazard: 'radiation', name: { en: 'Radiation dose rate', hu: 'Sugárzási dózisteljesítmény', ru: 'Мощность дозы' }, unit: 'µSv/h', axis: [0, 120], ok: [0, 30], warn: [0, 60], mode: 'continuous', source: 'environment', body: 'shoulderL', clinical: false, env: true },
+  { id: 'radDoseMission', sector: 12, hazard: 'radiation', name: { en: 'Mission dose', hu: 'Kumulált küldetésdózis', ru: 'Накопленная доза' }, unit: 'mSv', axis: [0, 600], ok: [0, 150], warn: [0, 400], mode: 'continuous', source: 'environment', body: 'shoulderL', clinical: false, env: true },
   { id: 'cabinTemp', sector: 12, name: { en: 'Ambient temperature', hu: 'Környezeti hőmérséklet', ru: 'Температура среды' }, unit: '°C', axis: [10, 35], ok: [18.5, 26.5], warn: [16, 29], mode: 'continuous', source: 'environment', body: null, clinical: false, env: true },
   { id: 'humidity', sector: 12, disk: false, name: { en: 'Relative humidity', hu: 'Páratartalom', ru: 'Влажность' }, unit: '%', axis: [0, 100], ok: [30, 65], warn: [25, 75], mode: 'continuous', source: 'environment', body: null, clinical: false, env: true },
   { id: 'co2', sector: 12, name: { en: 'CO₂ level', hu: 'CO₂-szint', ru: 'Уровень CO₂' }, unit: 'ppm', axis: [300, 8000], ok: [300, 2600], warn: [300, 5000], mode: 'continuous', source: 'environment', body: null, clinical: false, env: true },
   { id: 'ppO2', sector: 12, disk: false, name: { en: 'O₂ partial pressure', hu: 'O₂ parciális nyomás', ru: 'Парц. давление O₂' }, unit: 'kPa', axis: [14, 30], ok: [19.5, 23.1], warn: [17.5, 25], mode: 'continuous', source: 'environment', body: null, clinical: false, env: true },
   { id: 'cabinPressure', sector: 12, disk: false, name: { en: 'Ambient pressure', hu: 'Környezeti nyomás', ru: 'Давление' }, unit: 'kPa', axis: [60, 110], ok: [97, 103], warn: [90, 105], mode: 'continuous', source: 'environment', body: null, clinical: false, env: true },
   { id: 'noise', sector: 12, disk: false, name: { en: 'Noise level', hu: 'Zajszint', ru: 'Уровень шума' }, unit: 'dBA', axis: [20, 100], ok: [20, 60], warn: [20, 72], mode: 'continuous', source: 'environment', body: 'head', clinical: false, env: true },
+  // Gravity fields
+  { id: 'gravity', sector: 12, disk: false, hazard: 'gravity', name: { en: 'Gravity level', hu: 'Gravitációs szint', ru: 'Уровень гравитации' }, unit: 'g', axis: [0, 2], ok: [0.9, 1.1], warn: [0, 1.5], mode: 'continuous', source: 'environment', body: null, clinical: false, env: true },
+  { id: 'reducedGravityDays', sector: 12, disk: false, hazard: 'gravity', name: { en: 'Reduced-gravity exposure', hu: 'Csökkent gravitációs kitettség', ru: 'Пребывание в пониженной гравитации' }, unit: 'days', axis: [0, 450], ok: [0, 180], warn: [0, 365], mode: 'continuous', source: 'mission', body: null, clinical: false, env: true },
 ];
+
+// Status categories (see scoring.js): every parameter belongs to one of
+//   health · mental · environment   (location & communication are link checks)
+// hazard = sub-group shown inside the category tile.
+for (const p of PARAMS) {
+  p.category ||= p.env ? 'environment' : 'health';
+  p.hazard ||= p.env ? 'habitat' : 'body';
+}
+export const CATEGORY_PARAMS = cat => PARAMS.filter(p => p.category === cat);
 
 export const PARAM_BY_ID = Object.fromEntries(PARAMS.map(p => [p.id, p]));
 
