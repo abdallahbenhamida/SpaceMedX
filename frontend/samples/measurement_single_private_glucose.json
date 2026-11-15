@@ -1,0 +1,27 @@
+{
+  "schemaVersion": "1.0",
+  "measurementId": "m-u302-bg-20261114-0730",
+  "userId": "u-302",
+  "parameter": "bloodGlucose",
+  "unit": "mmol/L",
+  "type": "single",
+  "private": true,
+  "source": {
+    "device": "Glucometer GX-2",
+    "timezone": "Europe/Budapest",
+    "location": {
+      "frame": "earth",
+      "lat": 47.5316,
+      "lon": 19.0402
+    }
+  },
+  "samples": [
+    {
+      "t": "2026-11-14T07:30:00+01:00",
+      "v": 5.4
+    }
+  ],
+  "meta": {
+    "fasting": true
+  }
+}

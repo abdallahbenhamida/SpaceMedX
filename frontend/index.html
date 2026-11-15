@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html lang="hu"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Crew Health Monitor — launcher</title><link rel="stylesheet" href="common/css/theme.css">
+<style>.wrap{max-width:860px;margin:10vh auto;padding:20px}.cards{margin-top:24px}.card{text-decoration:none;color:inherit}.card p{margin:0;color:var(--muted);font-size:13px}</style></head>
+<body><div class="wrap">
+<div class="brand big"><span class="brand-mark"></span><div><div class="brand-name">Crew Health Monitor</div><div class="brand-sub">Visualization v0.1</div></div></div>
+<div class="cards">
+<a class="card" href="single-user/"><div class="card-name">1 · Single User</div><p>Saját adatok, csempék, feltöltés, napló, kérdőívek, adatvédelem</p></a>
+<a class="card" href="team-leader/"><div class="card-name">2 · Team Leader</div><p>3D csapat-diszkek, tagok, figyelmeztetés, hozzáférés-kérés</p></a>
+<a class="card" href="ground-control/"><div class="card-name">3 · Ground Control</div><p>Összes csapat, összesített 3D, operátor és orvos szerep</p></a>
+</div>
+<p class="muted small" style="margin-top:20px"><a href="#" onclick="localStorage.removeItem('shm_mock_store_v2');sessionStorage.clear();alert('Demo data reset');return false;">Demó adatok visszaállítása</a></p>
+</div></body></html>
