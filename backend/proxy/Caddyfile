@@ -1,0 +1,25 @@
+:80 {
+    # Security headers
+    header {
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+    }
+
+    # Route API & OpenAPI docs to FastAPI backend
+    handle /api/* {
+        reverse_proxy spacemedx-api:8000
+    }
+
+    handle /health {
+        reverse_proxy spacemedx-api:8000
+    }
+
+    handle /docs* {
+        reverse_proxy spacemedx-api:8000
+    }
+
+    handle /openapi.json {
+        reverse_proxy spacemedx-api:8000
+    }
+}
