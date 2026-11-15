@@ -1,0 +1,41 @@
+{
+  "schemaVersion": "1.0",
+  "measurementId": "m-u203-us-20261113",
+  "userId": "u-203",
+  "parameter": "heartRate",
+  "unit": "bpm",
+  "type": "single",
+  "private": false,
+  "source": {
+    "device": "Ultrasound unit",
+    "timezone": "UTC",
+    "location": {
+      "frame": "station",
+      "module": "Columbus",
+      "x": 1.2,
+      "y": 0.3
+    }
+  },
+  "samples": [
+    {
+      "t": "2026-11-13T15:10:00Z",
+      "v": 64
+    }
+  ],
+  "attachments": [
+    {
+      "kind": "dicom",
+      "name": "Cardiac ultrasound 4CH",
+      "url": "https://your-server.example.org/spacehealth/files/u-203/us-20261113.dcm",
+      "mime": "application/dicom"
+    },
+    {
+      "kind": "pdf",
+      "name": "Sonographer report",
+      "url": "https://your-server.example.org/spacehealth/files/u-203/us-20261113.pdf"
+    }
+  ],
+  "meta": {
+    "operator": "remote-guided"
+  }
+}

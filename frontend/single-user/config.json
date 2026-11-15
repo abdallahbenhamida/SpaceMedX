@@ -1,0 +1,14 @@
+{
+  "app": "single-user",
+  "mode": "mock",
+  "defaultLanguage": "hu",
+  "server": {
+    "baseUrl": "https://your-server.example.org/spacehealth/api/",
+    "timeoutMs": 10000,
+    "apiKey": "",
+    "withCredentials": false
+  },
+  "polling": { "latestSeconds": 15, "inboxSeconds": 8 },
+  "privacy": { "showRawValuesToNonPhysicians": false },
+  "history": { "defaultHours": 24 }
+}

@@ -1,0 +1,5 @@
+/* team-leader specific styles */
+.map-host.big .map-view { min-height: 62vh; }
+.map-host.big .leaflet-host { min-height: 62vh; }
+.sel-panel .disk-host { min-height: 420px; }
+.map-host.big svg { max-height: 62vh; }
