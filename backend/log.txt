@@ -1,0 +1,56 @@
+[1m============================= test session starts ==============================[0m
+platform linux -- Python 3.12.16, pytest-9.2.0, pluggy-1.7.0 -- /usr/local/bin/python3.12
+cachedir: .pytest_cache
+rootdir: /app
+configfile: pyproject.toml
+testpaths: tests
+plugins: anyio-4.16.0, asyncio-1.5.0, cov-7.1.0
+asyncio: mode=Mode.AUTO, debug=False, asyncio_default_fixture_loop_scope=session, asyncio_default_test_loop_scope=session
+[1mcollecting ... [0m[1mcollected 44 items                                                             [0m
+
+tests/test_audit.py::test_get_audit_logs_as_sys_admin [32mPASSED[0m[32m             [  2%][0m
+tests/test_audit.py::test_get_audit_logs_forbidden_for_astronaut [32mPASSED[0m[32m  [  4%][0m
+tests/test_auth.py::test_register_user [32mPASSED[0m[32m                            [  6%][0m
+tests/test_auth.py::test_register_duplicate_user [32mPASSED[0m[32m                  [  9%][0m
+tests/test_auth.py::test_login_success [32mPASSED[0m[32m                            [ 11%][0m
+tests/test_auth.py::test_login_invalid_credentials [32mPASSED[0m[32m                [ 13%][0m
+tests/test_auth_validation.py::test_register_invalid_email [32mPASSED[0m[32m        [ 15%][0m
+tests/test_auth_validation.py::test_register_weak_password [32mPASSED[0m[32m        [ 18%][0m
+tests/test_devices.py::test_register_device_success [32mPASSED[0m[32m               [ 20%][0m
+tests/test_devices.py::test_register_device_forbidden_for_astronaut [32mPASSED[0m[32m [ 22%][0m
+tests/test_emergency.py::test_emergency_grant_lifecycle [32mPASSED[0m[32m           [ 25%][0m
+tests/test_emergency.py::test_emergency_grant_forbidden_for_astronaut [32mPASSED[0m[32m [ 27%][0m
+tests/test_environment.py::test_ingest_environmental_telemetry_as_mission_control [32mPASSED[0m[32m [ 29%][0m
+tests/test_environment.py::test_ingest_environmental_telemetry_forbidden_for_astronaut [32mPASSED[0m[32m [ 31%][0m
+tests/test_health.py::test_health_check [32mPASSED[0m[32m                           [ 34%][0m
+tests/test_ingestion.py::test_ingest_batch_success [32mPASSED[0m[32m                [ 36%][0m
+tests/test_ingestion.py::test_ingest_batch_forbidden_for_astronaut [32mPASSED[0m[32m [ 38%][0m
+tests/test_medical.py::test_create_medical_record_as_officer [32mPASSED[0m[32m      [ 40%][0m
+tests/test_medical.py::test_create_medical_record_forbidden_for_astronaut [32mPASSED[0m[32m [ 43%][0m
+tests/test_missions.py::test_create_mission_success [32mPASSED[0m[32m               [ 45%][0m
+tests/test_missions.py::test_create_mission_duplicate_code [32mPASSED[0m[32m        [ 47%][0m
+tests/test_missions.py::test_create_mission_forbidden_for_astronaut [32mPASSED[0m[32m [ 50%][0m
+tests/test_mobile_sync.py::test_mobile_hub_connection_test [32mPASSED[0m[32m        [ 52%][0m
+tests/test_mobile_sync.py::test_pulsebelt_all_device_formats [32mPASSED[0m[32m      [ 54%][0m
+tests/test_mobile_sync.py::test_bloodpressure_format [32mPASSED[0m[32m              [ 56%][0m
+tests/test_mobile_sync.py::test_bloodsugar_format [32mPASSED[0m[32m                 [ 59%][0m
+tests/test_mobile_sync.py::test_ecg_block_1876_samples [32mPASSED[0m[32m            [ 61%][0m
+tests/test_mobile_sync.py::test_unknown_watch_telemetry_type [32mPASSED[0m[32m      [ 63%][0m
+tests/test_mobile_sync.py::test_idempotency_duplicate_suppression [32mPASSED[0m[32m [ 65%][0m
+tests/test_observations.py::test_create_observation_success [32mPASSED[0m[32m       [ 68%][0m
+tests/test_observations.py::test_create_observation_forbidden_for_astronaut [32mPASSED[0m[32m [ 70%][0m
+tests/test_organizations.py::test_create_organization_as_sys_admin [32mPASSED[0m[32m [ 72%][0m
+tests/test_organizations.py::test_create_organization_forbidden_for_astronaut [32mPASSED[0m[32m [ 75%][0m
+tests/test_organizations.py::test_add_organization_member [32mPASSED[0m[32m         [ 77%][0m
+tests/test_sharing.py::test_create_resource_share_success [32mPASSED[0m[32m         [ 79%][0m
+tests/test_sharing.py::test_create_resource_share_forbidden_for_astronaut [32mPASSED[0m[32m [ 81%][0m
+tests/test_subjects.py::test_create_subject_success [32mPASSED[0m[32m               [ 84%][0m
+tests/test_subjects.py::test_create_subject_forbidden_for_astronaut [32mPASSED[0m[32m [ 86%][0m
+tests/test_teams.py::test_create_team_success [32mPASSED[0m[32m                     [ 88%][0m
+tests/test_teams.py::test_create_team_forbidden_for_astronaut [32mPASSED[0m[32m     [ 90%][0m
+tests/test_telemetry_ws.py::test_websocket_environment_broadcast_and_sessions [32mPASSED[0m[32m [ 93%][0m
+tests/test_telemetry_ws.py::test_websocket_medical_channel_forbidden_for_guest [32mPASSED[0m[32m [ 95%][0m
+tests/test_users.py::test_get_current_user_profile [32mPASSED[0m[32m                [ 97%][0m
+tests/test_users.py::test_unauthorized_access [32mPASSED[0m[32m                     [100%][0m
+
+[32m============================= [32m[1m44 passed[0m[32m in 15.83s[0m[32m ==============================[0m

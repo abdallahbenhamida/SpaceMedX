@@ -1,7 +1,7 @@
 # app/schemas/observation.py
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, AliasChoices
 from app.enums.observation import ObservationQuality, ObservationSource
 
 class ObservationCreate(BaseModel):
@@ -17,7 +17,7 @@ class ObservationCreate(BaseModel):
     quality_status: ObservationQuality = ObservationQuality.VALID
     source_type: ObservationSource = ObservationSource.WEARABLE
     sync_batch_id: str | None = None
-    metadata_info: dict | None = Field(None, alias="metadata")
+    metadata_info: dict | None = Field(None, validation_alias=AliasChoices("metadata_info", "metadata"))
 
     model_config = ConfigDict(populate_by_name=True)
 
@@ -36,7 +36,7 @@ class ObservationResponse(BaseModel):
     quality_status: ObservationQuality
     source_type: ObservationSource
     sync_batch_id: uuid.UUID | None
-    metadata_info: dict | None = Field(None, alias="metadata")
+    metadata_info: dict | None = Field(None, serialization_alias="metadata")
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True, populate_by_name=True)
